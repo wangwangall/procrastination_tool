@@ -1,0 +1,59 @@
+# 基于Podman的应用部署与数据收集示例
+# 适合阿里云轻量服务器使用
+
+version: '3.8'
+
+services:
+  # 1. 示例Web应用（模拟您的工具）
+  # 说明：使用Nginx作为示例Web应用，您可以替换为自己的应用镜像
+  webapp:
+    image: nginx:stable-alpine  # 使用轻量级Nginx镜像
+    container_name: my-webapp
+    ports:
+      - "80:80"  # 将容器的80端口映射到服务器的80端口，外部可通过http://服务器IP访问
+    volumes:
+      - ./webapp/html:/usr/share/nginx/html  # 挂载本地HTML文件到容器
+      - ./webapp/logs:/var/log/nginx  # 挂载日志目录，便于收集访问日志
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=80
+    restart: always  # 容器异常退出时自动重启
+
+  # 2. 数据库服务（用于存储使用数据）
+  # 说明：使用PostgreSQL存储应用的使用数据、用户信息等
+  db:
+    image: postgres:15-alpine  # 轻量级PostgreSQL镜像
+    container_name: my-database
+    ports:
+      - "5432:5432"  # 数据库端口映射（可选，仅调试时使用）
+    volumes:
+      - db-data:/var/lib/postgresql/data  # 持久化存储数据库数据
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql  # 初始化数据库脚本
+    environment:
+      - POSTGRES_DB=app_db  # 数据库名称
+      - POSTGRES_USER=app_user  # 数据库用户名
+      - POSTGRES_PASSWORD=your_secure_password  # 数据库密码（请修改为强密码）
+    restart: always
+
+  # 3. 日志收集服务
+  # 说明：使用Fluentd收集应用日志，便于分析和监控
+  fluentd:
+    image: fluent/fluentd:v1.16-alpine  # 轻量级Fluentd镜像
+    container_name: my-fluentd
+    volumes:
+      - ./fluentd/conf:/fluentd/etc  # Fluentd配置文件
+      - ./webapp/logs:/var/log/webapp  # 挂载Web应用日志目录
+      - fluentd-data:/fluentd/log  # Fluentd自身日志
+    ports:
+      - "24224:24224"  # Fluentd默认端口
+    restart: always
+
+# 数据卷定义：用于持久化存储数据
+volumes:
+  db-data:  # 数据库数据卷
+  fluentd-data:  # Fluentd日志数据卷
+
+# 网络定义：所有服务在同一网络中，可通过服务名互相访问
+networks:
+  default:
+    name: app-network

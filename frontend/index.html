@@ -1,0 +1,2350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拖延探索笔记本</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding-bottom: 60px;
+        }
+        
+        /* 认证容器 */
+        #auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .auth-box {
+            background: white;
+            border-radius: 16px;
+            padding: 40px 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .auth-title {
+            text-align: center;
+            font-size: 24px;
+            color: #00897b;
+            margin-bottom: 30px;
+        }
+        
+        .auth-form {
+            display: none;
+        }
+        
+        .auth-form.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #4db6ac;
+        }
+        
+        .auth-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #4db6ac 0%, #00897b 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .auth-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        
+        .auth-switch a {
+            color: #00897b;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .auth-error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        /* 主应用容器 */
+        #app-container {
+            display: none;
+        }
+        
+        /* 页面标题 */
+        .page-header {
+            background: linear-gradient(135deg, #4db6ac 0%, #00897b 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .page-header h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .page-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* 选项卡样式 */
+        .tab-container {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            padding: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #4db6ac 0%, #00897b 100%);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 页面内容 */
+        .page-content {
+            padding: 20px;
+            display: none;
+            animation: pageFadeIn 0.3s ease;
+        }
+        
+        .page-content.active {
+            display: block;
+        }
+        
+        @keyframes pageFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #00897b;
+            margin-bottom: 15px;
+        }
+        
+        /* 滑块样式 */
+        .slider-group {
+            margin-bottom: 25px;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .slider-name {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .slider-name-with-help {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        
+        .help-icon {
+            color: #c62828;
+            font-size: 14px;
+            cursor: help;
+            position: relative;
+        }
+        
+        .dimension-explanation {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ffebee;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(198, 40, 40, 0.15);
+            z-index: 100;
+            width: 280px;
+            margin-top: 5px;
+        }
+        
+        .dimension-explanation.show {
+            display: block;
+        }
+        
+        .explanation-item {
+            margin-bottom: 8px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        
+        .explanation-label {
+            color: #c62828;
+            font-weight: 600;
+        }
+        
+        .explanation-content {
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .slider-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #00897b;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4db6ac 0%, #00897b 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4db6ac 0%, #00897b 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        
+        /* 权重显示 */
+        .weights-display {
+            background: #e0f2f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #00695c;
+        }
+        
+        /* 提交按钮 */
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #4db6ac 0%, #00897b 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0,137,123,0.3);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,137,123,0.4);
+        }
+        
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* 备注输入 */
+        .notes-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        /* 历史记录卡片 */
+        .history-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #4db6ac;
+        }
+        
+        .history-time {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+        
+        .history-dimensions {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        
+        .dimension-item {
+            text-align: center;
+        }
+        
+        .dimension-label {
+            font-size: 12px;
+            color: #666;
+            display: block;
+        }
+        
+        .dimension-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00897b;
+        }
+        
+        .history-result {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+        }
+        
+        .result-item {
+            text-align: center;
+        }
+        
+        .result-label {
+            font-size: 12px;
+            color: #666;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .risk-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .risk-high {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .risk-medium {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+        
+        .risk-low {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .view-report-btn {
+            width: 100%;
+            padding: 10px;
+            background: white;
+            color: #00897b;
+            border: 2px solid #00897b;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .view-report-btn:hover {
+            background: #00897b;
+            color: white;
+        }
+        
+        /* 筛选栏 */
+        .filter-bar {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .filter-select {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        /* 我的页面 */
+        .profile-header {
+            background: linear-gradient(135deg, #4db6ac 0%, #00897b 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 20px;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: white;
+            color: #00897b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            margin: 0 auto 15px;
+        }
+        
+        .profile-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .profile-id {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .settings-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 10px;
+            padding-left: 5px;
+        }
+        
+        .setting-item {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .setting-item:hover {
+            background: #f5f5f5;
+        }
+        
+        .setting-label {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .setting-value {
+            color: #00897b;
+            font-weight: 600;
+        }
+        
+        .setting-arrow {
+            color: #999;
+        }
+        
+        /* 数据分析 */
+        .analytics-card {
+            background: white;
+            border-radius: 16px;
+            padding: 0;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .analytics-header {
+            background: linear-gradient(135deg, #4db6ac 0%, #00897b 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .analytics-header h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 20px;
+        }
+        
+        .analytics-stat-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 12px;
+            padding: 20px 15px;
+            text-align: center;
+            border: 1px solid #e0f2f1;
+            box-shadow: 0 2px 8px rgba(0, 137, 123, 0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .analytics-stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 137, 123, 0.15);
+        }
+        
+        .analytics-stat-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .analytics-stat-number {
+            font-size: 26px;
+            font-weight: bold;
+            color: #00897b;
+            line-height: 1.2;
+        }
+        
+        .analytics-stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .analytics-full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .analytics-section {
+            padding: 0 20px 20px 20px;
+        }
+        
+        .analytics-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #00897b;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .analytics-section-title::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: linear-gradient(180deg, #4db6ac 0%, #00897b 100%);
+            border-radius: 2px;
+        }
+        
+        .analytics-dimensions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .analytics-dimension-card {
+            flex: 1;
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+        }
+        
+        .analytics-dimension-card .value {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        
+        .analytics-dimension-card .label {
+            font-size: 11px;
+            opacity: 0.85;
+        }
+        
+        .dimension-aversion {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            color: #c62828;
+        }
+        
+        .dimension-value {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            color: #ef6c00;
+        }
+        
+        .dimension-control {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            color: #2e7d32;
+        }
+        
+        .analytics-risk-distribution {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .analytics-risk-card {
+            flex: 1;
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+        }
+        
+        .analytics-risk-card .count {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        
+        .analytics-risk-card .label {
+            font-size: 11px;
+            opacity: 0.85;
+        }
+        
+        .risk-high {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            color: #c62828;
+        }
+        
+        .risk-medium {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            color: #ef6c00;
+        }
+        
+        .risk-low {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            color: #2e7d32;
+        }
+        
+        .analytics-trend-container {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+        }
+        
+        /* 底部导航栏 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .nav-item.active {
+            color: #00897b;
+        }
+        
+        .nav-item.active .nav-icon {
+            color: #00897b;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+            color: #999;
+        }
+        
+        .nav-label {
+            font-size: 12px;
+            color: inherit;
+        }
+        
+        /* 加载动画 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e0e0e0;
+            border-top-color: #00897b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #00897b;
+        }
+        
+        .modal-close {
+            float: right;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        /* 响应式设计 */
+        @media (min-width: 768px) {
+            body {
+                padding-bottom: 0;
+            }
+            
+            .bottom-nav {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                right: auto;
+                width: 80px;
+                flex-direction: column;
+                justify-content: flex-start;
+                padding-top: 20px;
+            }
+            
+            .nav-item {
+                padding: 15px 0;
+            }
+            
+            .page-content {
+                margin-left: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 认证容器 -->
+    <div id="auth-container">
+        <div class="auth-box">
+            <h1 class="auth-title">拖延探索笔记本</h1>
+            
+            <!-- 登录表单 -->
+            <div id="login-form" class="auth-form active">
+                <div class="auth-error" id="login-error"></div>
+                <div class="form-group">
+                    <label>手机号/邮箱</label>
+                    <input type="text" id="login-identifier" placeholder="请输入手机号或邮箱">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="login-password" placeholder="请输入密码">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: flex; align-items: center; gap: 10px; font-weight: normal;">
+                        <input type="checkbox" id="login-agree-terms" required>
+                        <span style="font-size: 14px; color: #666;">
+                            我已阅读并同意
+                            <a href="#" onclick="showTermsModal()" style="color: #00897b; text-decoration: underline;">《用户协议》</a>
+                            和
+                            <a href="#" onclick="showPrivacyModal()" style="color: #00897b; text-decoration: underline;">《隐私政策》</a>
+                        </span>
+                    </label>
+                </div>
+                <button class="auth-btn" onclick="handleLogin()">登录</button>
+                <div class="auth-switch">
+                    还没有账号？<a href="#" onclick="showRegister()">立即注册</a>
+                </div>
+            </div>
+            
+            <!-- 注册表单 -->
+            <div id="register-form" class="auth-form">
+                <div class="auth-error" id="register-error"></div>
+                <div class="form-group">
+                    <label>手机号</label>
+                    <input type="text" id="register-phone" placeholder="请输入手机号（选填）">
+                </div>
+                <div class="form-group">
+                    <label>邮箱</label>
+                    <input type="email" id="register-email" placeholder="请输入邮箱（选填）">
+                </div>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="register-username" placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="register-password" placeholder="请输入密码（至少6位）">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: flex; align-items: center; gap: 10px; font-weight: normal;">
+                        <input type="checkbox" id="register-agree-terms" required>
+                        <span style="font-size: 14px; color: #666;">
+                            我已阅读并同意
+                            <a href="#" onclick="showTermsModal()" style="color: #00897b; text-decoration: underline;">《用户协议》</a>
+                            和
+                            <a href="#" onclick="showPrivacyModal()" style="color: #00897b; text-decoration: underline;">《隐私政策》</a>
+                            ，同意收集我的三维度评估数据
+                        </span>
+                    </label>
+                </div>
+                <button class="auth-btn" onclick="handleRegister()">注册</button>
+                <div class="auth-switch">
+                    已有账号？<a href="#" onclick="showLogin()">立即登录</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 主应用容器 -->
+    <div id="app-container">
+        <!-- 测试端页面 -->
+        <div id="assess-page" class="page-content active">
+            <div class="page-header">
+                <h1>拖延探索笔记本</h1>
+                <p>探索你的拖延模式</p>
+            </div>
+            
+            <!-- 选项卡切换 -->
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="switchTab('input')">📊 输入评估</button>
+                <button class="tab-btn" onclick="switchTab('report')">📋 完整报告</button>
+            </div>
+            
+            <!-- 输入评估选项卡内容 -->
+            <div id="input-tab" class="tab-content active">
+                <div class="card">
+                    <div class="card-title">当前权重设置</div>
+                    <div class="weights-display" id="current-weights">
+                        任务厌恶: 0.4 | 结果价值: 0.3 | 自我控制: 0.3
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">三维度评估</div>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <div class="slider-name-with-help">
+                                <span class="slider-name">任务厌恶程度</span>
+                                <span class="help-icon" onclick="toggleExplanation('task-aversion')" onmouseenter="showExplanation('task-aversion')" onmouseleave="hideExplanation('task-aversion')">
+                                    ❓
+                                    <div id="task-aversion-explanation" class="dimension-explanation">
+                                        <div class="explanation-item">
+                                            <span class="explanation-label">定义：</span>
+                                            <span class="explanation-content">衡量「执行任务过程中的抵触情绪强度」</span>
+                                        </div>
+                                        <div class="explanation-item">
+                                            <span class="explanation-label">参考：</span>
+                                            <span class="explanation-content">10分=全程享受任务，100分=极度厌恶想逃避</span>
+                                        </div>
+                                    </div>
+                                </span>
+                            </div>
+                            <span class="slider-value" id="task-aversion-value">50</span>
+                        </div>
+                        <input type="range" id="task-aversion" min="0" max="100" value="50">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <div class="slider-name-with-help">
+                                <span class="slider-name">结果价值感</span>
+                                <span class="help-icon" onclick="toggleExplanation('result-value')" onmouseenter="showExplanation('result-value')" onmouseleave="hideExplanation('result-value')">
+                                    ❓
+                                    <div id="result-value-explanation" class="dimension-explanation">
+                                        <div class="explanation-item">
+                                            <span class="explanation-label">定义：</span>
+                                            <span class="explanation-content">衡量「任务完成后对你的价值高低」</span>
+                                        </div>
+                                        <div class="explanation-item">
+                                            <span class="explanation-label">参考：</span>
+                                            <span class="explanation-content">10分=毫无价值，100分=关乎重大利益/价值观</span>
+                                        </div>
+                                    </div>
+                                </span>
+                            </div>
+                            <span class="slider-value" id="result-value-value">50</span>
+                        </div>
+                        <input type="range" id="result-value" min="0" max="100" value="50">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <div class="slider-name-with-help">
+                                <span class="slider-name">自我控制能力</span>
+                                <span class="help-icon" onclick="toggleExplanation('self-control')" onmouseenter="showExplanation('self-control')" onmouseleave="hideExplanation('self-control')">
+                                    ❓
+                                    <div id="self-control-explanation" class="dimension-explanation">
+                                        <div class="explanation-item">
+                                            <span class="explanation-label">定义：</span>
+                                            <span class="explanation-content">衡量「克制分心/拖延行为的实际能力」</span>
+                                        </div>
+                                        <div class="explanation-item">
+                                            <span class="explanation-label">参考：</span>
+                                            <span class="explanation-content">10分=完全无法自控，100分=钢铁般自律；强制约束</span>
+                                        </div>
+                                    </div>
+                                </span>
+                            </div>
+                            <span class="slider-value" id="self-control-value">50</span>
+                        </div>
+                        <input type="range" id="self-control" min="0" max="100" value="50">
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">备注（选填）</div>
+                    <textarea class="notes-input" id="user-notes" placeholder="记录你的想法、情境或感受..."></textarea>
+                </div>
+                
+                <button class="submit-btn" id="assess-btn" onclick="handleAssess()">提交评估</button>
+            </div>
+            
+            <!-- 完整报告选项卡内容 -->
+            <div id="report-tab" class="tab-content">
+                <div id="report-container" class="card">
+                    <div class="empty-state">
+                        <div class="empty-icon">📝</div>
+                        <div>请先完成评估</div>
+                        <div style="font-size: 12px; margin-top: 10px; color: #999;">提交评估后可在此查看完整报告</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 历史数据页面 -->
+        <div id="history-page" class="page-content">
+            <div class="page-header">
+                <h1>历史记录</h1>
+                <p>查看你的探索历程</p>
+            </div>
+            
+            <div class="filter-bar">
+                <select class="filter-select" id="time-filter" onchange="loadHistory()">
+                    <option value="all">全部时间</option>
+                    <option value="week">最近一周</option>
+                    <option value="month">最近一月</option>
+                </select>
+                <select class="filter-select" id="level-filter" onchange="loadHistory()">
+                    <option value="all">全部等级</option>
+                    <option value="高">高风险</option>
+                    <option value="中">中风险</option>
+                    <option value="低">低风险</option>
+                </select>
+            </div>
+            
+            <div id="history-list">
+                <div class="loading">加载中</div>
+            </div>
+        </div>
+        
+        <!-- 我的页面 -->
+        <div id="profile-page" class="page-content">
+            <div class="profile-header">
+                <div class="profile-avatar" id="profile-avatar">U</div>
+                <div class="profile-name" id="profile-name">用户名</div>
+                <div class="profile-id" id="profile-id">user_id</div>
+            </div>
+            
+            <div class="settings-section">
+                <div class="section-title">设置</div>
+                
+                <div class="setting-item" onclick="showWeightModal()">
+                    <div>
+                        <div class="setting-label">权重设置</div>
+                        <div style="font-size: 12px; color: #999; margin-top: 5px;">自定义核心函数权重</div>
+                    </div>
+                    <div>
+                        <span class="setting-value" id="weight-summary">0.4/0.3/0.3</span>
+                        <span class="setting-arrow">›</span>
+                    </div>
+                </div>
+                
+                <div class="setting-item" onclick="handleLogout()">
+                    <div class="setting-label">退出登录</div>
+                    <div class="setting-arrow">›</div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <div class="section-title">数据分析</div>
+                
+                <div class="analytics-card" id="analytics-card">
+                    <div class="loading">加载中</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部导航栏 -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchPage('assess')">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">评估</div>
+            </div>
+            <div class="nav-item" onclick="switchPage('history')">
+                <div class="nav-icon">📝</div>
+                <div class="nav-label">历史</div>
+            </div>
+            <div class="nav-item" onclick="switchPage('profile')">
+                <div class="nav-icon">👤</div>
+                <div class="nav-label">我的</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 权重设置模态框 -->
+    <div id="weight-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeWeightModal()">×</span>
+            <h2 class="modal-title">权重设置</h2>
+            
+            <div class="form-group">
+                <label>任务厌恶权重 (w1)</label>
+                <input type="number" id="weight-w1" step="0.1" min="0" max="1" value="0.4">
+            </div>
+            
+            <div class="form-group">
+                <label>结果价值权重 (w2)</label>
+                <input type="number" id="weight-w2" step="0.1" min="0" max="1" value="0.3">
+            </div>
+            
+            <div class="form-group">
+                <label>自我控制权重 (w3)</label>
+                <input type="number" id="weight-w3" step="0.1" min="0" max="1" value="0.3">
+            </div>
+            
+            <div style="color: #999; font-size: 12px; margin-bottom: 15px;">
+                注意：三个权重之和必须等于1
+            </div>
+            
+            <button class="auth-btn" onclick="saveWeights()">保存</button>
+        </div>
+    </div>
+    
+    <!-- 用户协议模态框 -->
+    <div id="terms-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeTermsModal()">×</span>
+            <h2 class="modal-title">用户协议</h2>
+            <div style="max-height: 400px; overflow-y: auto; font-size: 14px; line-height: 1.8; color: #555;">
+                <h3>1. 协议接受</h3>
+                <p>通过注册、登录或使用本服务，您确认您已阅读、理解并同意遵守本《用户协议》（以下简称"本协议"）的全部内容。</p>
+                
+                <h3>2. 服务内容</h3>
+                <p>本服务提供拖延风险评估工具，包括三维度评估、个性化建议等功能。</p>
+                
+                <h3>3. 数据收集与使用</h3>
+                <p>我们会收集您的评估数据，包括任务厌恶程度、结果价值感和自我控制能力等，用于提供评估服务和改进产品。</p>
+                
+                <h3>4. 数据安全</h3>
+                <p>我们采取合理的安全措施保护您的个人信息，防止数据泄露、丢失或被滥用。</p>
+                
+                <h3>5. 用户义务</h3>
+                <p>您应提供真实、准确的信息，并对您的账户安全负责。</p>
+                
+                <h3>6. 协议变更</h3>
+                <p>我们可能会不时更新本协议，您应定期查看。继续使用本服务即表示您同意修订后的协议。</p>
+                
+                <h3>7. 终止服务</h3>
+                <p>我们有权在必要时终止或暂停服务，无需提前通知。</p>
+            </div>
+            <button class="auth-btn" onclick="closeTermsModal()" style="margin-top: 20px;">我已阅读</button>
+        </div>
+    </div>
+    
+    <!-- 隐私政策模态框 -->
+    <div id="privacy-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closePrivacyModal()">×</span>
+            <h2 class="modal-title">隐私政策</h2>
+            <div style="max-height: 400px; overflow-y: auto; font-size: 14px; line-height: 1.8; color: #555;">
+                <h3>1. 隐私保护承诺</h3>
+                <p>我们重视您的隐私保护，承诺按照本政策处理您的个人信息。</p>
+                
+                <h3>2. 收集的信息</h3>
+                <p>我们收集以下信息：</p>
+                <ul>
+                    <li>个人身份信息（如手机号、邮箱、用户名）</li>
+                    <li>评估数据（任务厌恶程度、结果价值感、自我控制能力）</li>
+                    <li>使用数据（访问时间、IP地址等）</li>
+                </ul>
+                
+                <h3>3. 信息使用目的</h3>
+                <p>我们使用您的信息用于：</p>
+                <ul>
+                    <li>提供和改进评估服务</li>
+                    <li>生成个性化建议</li>
+                    <li>确保服务安全</li>
+                    <li>遵守法律法规</li>
+                </ul>
+                
+                <h3>4. 信息共享</h3>
+                <p>我们不会向第三方出售您的个人信息，但可能在以下情况下共享：</p>
+                <ul>
+                    <li>获得您的明确同意</li>
+                    <li>遵守法律法规</li>
+                    <li>保护我们的合法权益</li>
+                </ul>
+                
+                <h3>5. 信息安全</h3>
+                <p>我们采取多种安全措施保护您的信息，包括加密存储、访问控制等。</p>
+                
+                <h3>6. 您的权利</h3>
+                <p>您有权访问、更正或删除您的个人信息。</p>
+                
+                <h3>7. 隐私政策更新</h3>
+                <p>我们可能会更新本隐私政策，您应定期查看。</p>
+            </div>
+            <button class="auth-btn" onclick="closePrivacyModal()" style="margin-top: 20px;">我已阅读</button>
+        </div>
+    </div>
+
+    <script>
+        // 使用绝对路径，确保请求发送到正确的服务器
+        const API_BASE = 'http://8.148.7.83:5001/api';
+        
+        // 当前评估结果（用于报告显示）
+        let currentResult = null;
+        
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+            initSliders();
+            restoreAssessState();
+        });
+        
+        // 初始化滑块
+        function initSliders() {
+            const sliders = ['task-aversion', 'result-value', 'self-control'];
+            
+            sliders.forEach(id => {
+                const slider = document.getElementById(id);
+                const valueDisplay = document.getElementById(`${id}-value`);
+                
+                slider.addEventListener('input', function() {
+                    valueDisplay.textContent = this.value;
+                    saveAssessState();
+                });
+            });
+            
+            // 备注输入也保存状态
+            document.getElementById('user-notes').addEventListener('input', saveAssessState);
+            
+            // 点击其他区域关闭所有解释框
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.help-icon')) {
+                    document.querySelectorAll('.dimension-explanation').forEach(el => {
+                        el.classList.remove('show');
+                    });
+                }
+            });
+        }
+        
+        // 显示维度解释
+        function showExplanation(dimensionId) {
+            document.getElementById(`${dimensionId}-explanation`).classList.add('show');
+        }
+        
+        // 隐藏维度解释
+        function hideExplanation(dimensionId) {
+            document.getElementById(`${dimensionId}-explanation`).classList.remove('show');
+        }
+        
+        // 切换维度解释（点击）
+        function toggleExplanation(dimensionId) {
+            const explanation = document.getElementById(`${dimensionId}-explanation`);
+            explanation.classList.toggle('show');
+        }
+        
+        // 保存评估状态到localStorage
+        function saveAssessState() {
+            const state = {
+                taskAversion: document.getElementById('task-aversion').value,
+                resultValue: document.getElementById('result-value').value,
+                selfControl: document.getElementById('self-control').value,
+                userNotes: document.getElementById('user-notes').value
+            };
+            localStorage.setItem('assessState', JSON.stringify(state));
+        }
+        
+        // 从localStorage恢复评估状态
+        function restoreAssessState() {
+            const saved = localStorage.getItem('assessState');
+            if (saved) {
+                try {
+                    const state = JSON.parse(saved);
+                    document.getElementById('task-aversion').value = state.taskAversion || 50;
+                    document.getElementById('result-value').value = state.resultValue || 50;
+                    document.getElementById('self-control').value = state.selfControl || 50;
+                    document.getElementById('user-notes').value = state.userNotes || '';
+                    
+                    // 更新显示值
+                    document.getElementById('task-aversion-value').textContent = state.taskAversion || 50;
+                    document.getElementById('result-value-value').textContent = state.resultValue || 50;
+                    document.getElementById('self-control-value').textContent = state.selfControl || 50;
+                } catch (e) {
+                    console.error('恢复评估状态失败:', e);
+                }
+            }
+        }
+        
+        // 切换选项卡
+        function switchTab(tab) {
+            // 更新选项卡按钮状态
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 更新选项卡内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tab}-tab`).classList.add('active');
+            
+            // 保存当前选项卡状态
+            localStorage.setItem('currentTab', tab);
+        }
+        
+        // 恢复选项卡状态
+        function restoreTabState() {
+            const savedTab = localStorage.getItem('currentTab');
+            if (savedTab) {
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                document.querySelector(`.tab-btn[onclick="switchTab('${savedTab}')"]`)?.classList.add('active');
+                document.getElementById(`${savedTab}-tab`)?.classList.add('active');
+            }
+        }
+        
+        // 检查登录状态
+        async function checkLoginStatus() {
+            try {
+                console.log('检查登录状态...');
+                const response = await fetch(`${API_BASE}/user`, {
+                    credentials: 'include'
+                });
+                
+                console.log('用户信息响应状态:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('用户信息响应数据:', data);
+                    if (data.status === 'success') {
+                        console.log('用户已登录，显示应用界面');
+                        showApp(data.user);
+                    } else {
+                        console.log('用户未登录，显示认证界面');
+                        showAuth();
+                    }
+                } else {
+                    console.log('响应失败，显示认证界面');
+                    showAuth();
+                }
+            } catch (error) {
+                console.error('检查登录状态错误:', error);
+                showAuth();
+            }
+        }
+        
+        // 显示认证界面
+        function showAuth() {
+            document.getElementById('auth-container').style.display = 'flex';
+            document.getElementById('app-container').style.display = 'none';
+        }
+        
+        // 显示应用界面
+        function showApp(user) {
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+            
+            // 更新用户信息
+            document.getElementById('profile-name').textContent = user.username;
+            document.getElementById('profile-id').textContent = user.user_id;
+            document.getElementById('profile-avatar').textContent = user.username.charAt(0).toUpperCase();
+            
+            // 更新权重显示
+            updateWeightsDisplay(user.w1, user.w2, user.w3);
+            
+            // 加载数据
+            loadAnalytics();
+        }
+        
+        // 更新权重显示
+        function updateWeightsDisplay(w1, w2, w3) {
+            document.getElementById('current-weights').textContent = 
+                `任务厌恶: ${w1} | 结果价值: ${w2} | 自我控制: ${w3}`;
+            document.getElementById('weight-summary').textContent = 
+                `${w1}/${w2}/${w3}`;
+        }
+        
+        // 显示登录表单
+        function showLogin() {
+            document.getElementById('login-form').classList.add('active');
+            document.getElementById('register-form').classList.remove('active');
+        }
+        
+        // 显示注册表单
+        function showRegister() {
+            document.getElementById('login-form').classList.remove('active');
+            document.getElementById('register-form').classList.add('active');
+        }
+        
+        // 显示用户协议模态框
+        function showTermsModal() {
+            document.getElementById('terms-modal').classList.add('active');
+        }
+        
+        // 关闭用户协议模态框
+        function closeTermsModal() {
+            document.getElementById('terms-modal').classList.remove('active');
+        }
+        
+        // 显示隐私政策模态框
+        function showPrivacyModal() {
+            document.getElementById('privacy-modal').classList.add('active');
+        }
+        
+        // 关闭隐私政策模态框
+        function closePrivacyModal() {
+            document.getElementById('privacy-modal').classList.remove('active');
+        }
+        
+        // 处理登录
+        async function handleLogin() {
+            const identifier = document.getElementById('login-identifier').value.trim();
+            const password = document.getElementById('login-password').value;
+            const agreeToTerms = document.getElementById('login-agree-terms').checked;
+            
+            if (!identifier || !password) {
+                showError('login-error', '请填写完整信息');
+                return;
+            }
+            
+            if (!agreeToTerms) {
+                showError('login-error', '请阅读并同意用户协议和隐私政策');
+                return;
+            }
+            
+            try {
+                console.log('正在登录...');
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
+                    body: JSON.stringify({identifier, password, agree_to_terms: agreeToTerms})
+                });
+                
+                console.log('登录响应状态:', response.status);
+                const data = await response.json();
+                console.log('登录响应数据:', data);
+                
+                if (data.status === 'success') {
+                    console.log('登录成功，正在检查登录状态...');
+                    await checkLoginStatus();
+                } else {
+                    console.log('登录失败:', data.message);
+                    showError('login-error', data.message);
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                showError('login-error', '登录失败，请重试: ' + error.message);
+            }
+        }
+        
+        // 处理注册
+        async function handleRegister() {
+            const phone = document.getElementById('register-phone').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value;
+            const agreeToTerms = document.getElementById('register-agree-terms').checked;
+            
+            if (!phone && !email) {
+                showError('register-error', '请提供手机号或邮箱');
+                return;
+            }
+            
+            if (!username) {
+                showError('register-error', '请输入用户名');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('register-error', '密码至少6位');
+                return;
+            }
+            
+            if (!agreeToTerms) {
+                showError('register-error', '请阅读并同意用户协议和隐私政策');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/register`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
+                    body: JSON.stringify({phone, email, username, password, agree_to_terms: agreeToTerms})
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    checkLoginStatus();
+                } else {
+                    showError('register-error', data.message);
+                }
+            } catch (error) {
+                showError('register-error', '注册失败，请重试');
+            }
+        }
+        
+        // 处理登出
+        async function handleLogout() {
+            try {
+                await fetch(`${API_BASE}/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                showAuth();
+            } catch (error) {
+                console.error('登出失败:', error);
+            }
+        }
+        
+        // 显示错误
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 切换页面
+        function switchPage(page) {
+            // 更新导航栏
+            document.querySelectorAll('.nav-item').forEach((item, index) => {
+                item.classList.remove('active');
+            });
+            
+            const pageIndex = {'assess': 0, 'history': 1, 'profile': 2}[page];
+            document.querySelectorAll('.nav-item')[pageIndex].classList.add('active');
+            
+            // 更新页面内容
+            document.querySelectorAll('.page-content').forEach(p => {
+                p.classList.remove('active');
+            });
+            
+            document.getElementById(`${page}-page`).classList.add('active');
+            
+            // 如果切换到评估页面，恢复选项卡状态和评估输入状态
+            if (page === 'assess') {
+                restoreAssessState();
+                restoreTabState();
+            }
+            
+            // 加载数据
+            if (page === 'history') {
+                loadHistory();
+            } else if (page === 'profile') {
+                loadAnalytics();
+            }
+        }
+        
+        // 处理评估
+        async function handleAssess() {
+            const taskAversion = parseInt(document.getElementById('task-aversion').value);
+            const resultValue = parseInt(document.getElementById('result-value').value);
+            const selfControl = parseInt(document.getElementById('self-control').value);
+            const userNotes = document.getElementById('user-notes').value.trim();
+            
+            const btn = document.getElementById('assess-btn');
+            btn.disabled = true;
+            btn.textContent = '评估中...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/assess`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        task_aversion: taskAversion,
+                        result_value: resultValue,
+                        self_control: selfControl,
+                        user_notes: userNotes
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // 显示结果
+                    showAssessResult(data.result);
+                } else {
+                    alert('评估失败: ' + data.message);
+                }
+            } catch (error) {
+                alert('评估失败，请重试');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '提交评估';
+            }
+        }
+        
+        // 显示评估结果
+        function showAssessResult(result) {
+            currentResult = result;
+            
+            const reportContainer = document.getElementById('report-container');
+            const username = document.getElementById('profile-name').textContent;
+            const reportTime = formatTime(result.timestamp);
+            
+            reportContainer.innerHTML = `
+                <div class="report-header" style="text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0;">
+                    <div style="font-size: 18px; font-weight: 600; color: #00897b; margin-bottom: 8px;">拖延风险评估报告</div>
+                    <div style="font-size: 12px; color: #999;">用户: ${username} | 时间: ${reportTime}</div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <div style="font-weight: 600; margin-bottom: 10px; color: #555;">三维度分数</div>
+                    <div style="display: flex; justify-content: space-around; padding: 15px; background: linear-gradient(135deg, #f5f5f5 0%, #e8f5e9 100%); border-radius: 12px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">任务厌恶程度</div>
+                            <div style="font-size: 28px; font-weight: bold; color: #c62828;">${result.task_aversion}</div>
+                            <div style="width: 60px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 8px auto;">
+                                <div style="width: ${result.task_aversion}%; height: 100%; background: linear-gradient(90deg, #4db6ac, #c62828); border-radius: 2px;"></div>
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">结果价值感</div>
+                            <div style="font-size: 28px; font-weight: bold; color: #ef6c00;">${result.result_value}</div>
+                            <div style="width: 60px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 8px auto;">
+                                <div style="width: ${result.result_value}%; height: 100%; background: linear-gradient(90deg, #4db6ac, #ef6c00); border-radius: 2px;"></div>
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">自我控制能力</div>
+                            <div style="font-size: 28px; font-weight: bold; color: #2e7d32;">${result.self_control}</div>
+                            <div style="width: 60px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 8px auto;">
+                                <div style="width: ${result.self_control}%; height: 100%; background: linear-gradient(90deg, #4db6ac, #2e7d32); border-radius: 2px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-around; margin-bottom: 20px; gap: 15px;">
+                    <div style="flex: 1; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 12px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">核心函数结果</div>
+                        <span class="risk-badge risk-${result.core_function.risk_level.toLowerCase()}">${result.core_function.risk_level}风险</span>
+                        <div style="margin-top: 8px; font-size: 14px; color: #666;">分数: ${result.core_function.score}</div>
+                    </div>
+                    <div style="flex: 1; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 12px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">模型预测结果</div>
+                        <span class="risk-badge risk-${result.model_prediction.risk_level.toLowerCase()}">${result.model_prediction.risk_level}风险</span>
+                        <div style="margin-top: 8px; font-size: 14px; color: #666;">${result.model_prediction.match ? '✓ 一致' : '✗ 不一致'}</div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px; padding: 20px; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); border-radius: 12px; border-left: 4px solid #00897b;">
+                    <div style="font-weight: 600; margin-bottom: 12px; color: #00695c; font-size: 16px;">💡 个性化建议</div>
+                    <div style="font-style: italic; color: #00695c; line-height: 1.8;" id="suggestion-text">${result.suggestion}</div>
+                    
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #80cbc4;">
+                        <div style="font-size: 13px; color: #00695c; margin-bottom: 12px;">这条建议对你有帮助吗？</div>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="submitFeedback('${result.timestamp}', '${result.suggestion.replace(/'/g, "\\'")}', '${result.core_function.risk_level}', 'useful', this)" 
+                                    style="flex: 1; padding: 10px; border: 1px solid #00897b; background: white; color: #00897b; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.3s;">
+                                👍 有用
+                            </button>
+                            <button onclick="submitFeedback('${result.timestamp}', '${result.suggestion.replace(/'/g, "\\'")}', '${result.core_function.risk_level}', 'partially_useful', this)" 
+                                    style="flex: 1; padding: 10px; border: 1px solid #00897b; background: white; color: #00897b; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.3s;">
+                                🤔 部分有用
+                            </button>
+                            <button onclick="submitFeedback('${result.timestamp}', '${result.suggestion.replace(/'/g, "\\'")}', '${result.core_function.risk_level}', 'useless', this)" 
+                                    style="flex: 1; padding: 10px; border: 1px solid #00897b; background: white; color: #00897b; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.3s;">
+                                👎 没用
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 8px; font-size: 12px; color: #999;">
+                    报告生成时间: ${reportTime}
+                </div>
+            `;
+            
+            // 自动切换到报告选项卡
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelector('.tab-btn[onclick="switchTab(\'report\')"]').classList.add('active');
+            document.getElementById('report-tab').classList.add('active');
+            localStorage.setItem('currentTab', 'report');
+        }
+        
+        // 提交反馈
+        async function submitFeedback(suggestionId, suggestionContent, riskLevel, feedbackType, btnElement) {
+            try {
+                // 禁用所有反馈按钮
+                const buttons = btnElement.parentElement.querySelectorAll('button');
+                buttons.forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                });
+                
+                // 高亮当前选中的按钮
+                btnElement.style.background = '#00897b';
+                btnElement.style.color = 'white';
+                
+                const response = await fetch(`${API_BASE}/feedback`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        suggestion_id: `suggestion_${suggestionId}`,
+                        suggestion_content: suggestionContent,
+                        risk_level: riskLevel,
+                        feedback_type: feedbackType
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // 显示感谢弹窗
+                    const thankYouDiv = document.createElement('div');
+                    thankYouDiv.style.cssText = `
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+                        padding: 20px 30px;
+                        border-radius: 12px;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                        z-index: 10000;
+                        text-align: center;
+                        animation: fadeIn 0.3s ease;
+                    `;
+                    thankYouDiv.innerHTML = `
+                        <div style="font-size: 32px; margin-bottom: 10px;">💚</div>
+                        <div style="color: #00695c; font-weight: 600;">谢谢你的反馈！</div>
+                        <div style="color: #00695c; font-size: 12px; margin-top: 5px;">我们会持续优化建议</div>
+                    `;
+                    document.body.appendChild(thankYouDiv);
+                    
+                    setTimeout(() => {
+                        thankYouDiv.remove();
+                    }, 2000);
+                } else {
+                    alert('提交失败: ' + data.message);
+                    // 恢复按钮状态
+                    buttons.forEach(btn => {
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                        btn.style.background = 'white';
+                        btn.style.color = '#00897b';
+                    });
+                }
+            } catch (error) {
+                console.error('提交反馈错误:', error);
+                alert('提交失败，请重试');
+            }
+        }
+        
+        // 查看报告（历史记录中使用）
+        function viewReport(reportPath) {
+            // 切换到评估页面
+            switchPage('assess');
+            
+            // 显示报告选项卡
+            setTimeout(() => {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.querySelector('.tab-btn[onclick="switchTab(\'report\')"]').classList.add('active');
+                document.getElementById('report-tab').classList.add('active');
+                localStorage.setItem('currentTab', 'report');
+            }, 100);
+        }
+        
+        // 从历史记录显示报告
+        function showHistoryReport(item) {
+            const reportContainer = document.getElementById('report-container');
+            const username = document.getElementById('profile-name').textContent;
+            const reportTime = formatTime(item.timestamp);
+            
+            reportContainer.innerHTML = `
+                <div class="report-header" style="text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0;">
+                    <div style="font-size: 18px; font-weight: 600; color: #00897b; margin-bottom: 8px;">拖延风险评估报告</div>
+                    <div style="font-size: 12px; color: #999;">用户: ${username} | 时间: ${reportTime}</div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <div style="font-weight: 600; margin-bottom: 10px; color: #555;">三维度分数</div>
+                    <div style="display: flex; justify-content: space-around; padding: 15px; background: linear-gradient(135deg, #f5f5f5 0%, #e8f5e9 100%); border-radius: 12px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">任务厌恶程度</div>
+                            <div style="font-size: 28px; font-weight: bold; color: #c62828;">${item.task_aversion}</div>
+                            <div style="width: 60px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 8px auto;">
+                                <div style="width: ${item.task_aversion}%; height: 100%; background: linear-gradient(90deg, #4db6ac, #c62828); border-radius: 2px;"></div>
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">结果价值感</div>
+                            <div style="font-size: 28px; font-weight: bold; color: #ef6c00;">${item.result_value}</div>
+                            <div style="width: 60px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 8px auto;">
+                                <div style="width: ${item.result_value}%; height: 100%; background: linear-gradient(90deg, #4db6ac, #ef6c00); border-radius: 2px;"></div>
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 5px;">自我控制能力</div>
+                            <div style="font-size: 28px; font-weight: bold; color: #2e7d32;">${item.self_control}</div>
+                            <div style="width: 60px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 8px auto;">
+                                <div style="width: ${item.self_control}%; height: 100%; background: linear-gradient(90deg, #4db6ac, #2e7d32); border-radius: 2px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-around; margin-bottom: 20px; gap: 15px;">
+                    <div style="flex: 1; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 12px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">核心函数结果</div>
+                        <span class="risk-badge risk-${item.risk_level.toLowerCase()}">${item.risk_level}风险</span>
+                        <div style="margin-top: 8px; font-size: 14px; color: #666;">分数: ${item.score}</div>
+                    </div>
+                    <div style="flex: 1; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 12px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">模型预测结果</div>
+                        <span class="risk-badge risk-${item.model_predicted_level.toLowerCase()}">${item.model_predicted_level}风险</span>
+                        <div style="margin-top: 8px; font-size: 14px; color: #666;">${item.match ? '✓ 一致' : '✗ 不一致'}</div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px; padding: 20px; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); border-radius: 12px; border-left: 4px solid #00897b;">
+                    <div style="font-weight: 600; margin-bottom: 12px; color: #00695c; font-size: 16px;">💡 个性化建议</div>
+                    <div style="font-style: italic; color: #00695c; line-height: 1.8;">${item.suggestion}</div>
+                </div>
+                
+                <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 8px; font-size: 12px; color: #999;">
+                    报告生成时间: ${reportTime}
+                </div>
+            `;
+            
+            // 切换到评估页面并显示报告选项卡
+            switchPage('assess');
+            setTimeout(() => {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.querySelector('.tab-btn[onclick="switchTab(\'report\')"]').classList.add('active');
+                document.getElementById('report-tab').classList.add('active');
+                localStorage.setItem('currentTab', 'report');
+            }, 100);
+        }
+        
+        // 加载历史记录
+        async function loadHistory() {
+            const timeFilter = document.getElementById('time-filter').value;
+            const levelFilter = document.getElementById('level-filter').value;
+            
+            const listContainer = document.getElementById('history-list');
+            listContainer.innerHTML = '<div class="loading">加载中</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/history`, {
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    let history = data.history;
+                    
+                    // 应用筛选
+                    if (timeFilter !== 'all') {
+                        const now = new Date();
+                        const filterDate = new Date(now.getTime() - (timeFilter === 'week' ? 7 : 30) * 24 * 60 * 60 * 1000);
+                        history = history.filter(item => new Date(item.timestamp) >= filterDate);
+                    }
+                    
+                    if (levelFilter !== 'all') {
+                        history = history.filter(item => item.risk_level === levelFilter);
+                    }
+                    
+                    if (history.length === 0) {
+                        listContainer.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-icon">📝</div>
+                                <div>暂无历史记录</div>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    listContainer.innerHTML = history.map(item => `
+                        <div class="history-card">
+                            <div class="history-time">${formatTime(item.timestamp)}</div>
+                            
+                            <div class="history-dimensions">
+                                <div class="dimension-item">
+                                    <span class="dimension-label">任务厌恶</span>
+                                    <span class="dimension-value">${item.task_aversion}</span>
+                                </div>
+                                <div class="dimension-item">
+                                    <span class="dimension-label">结果价值</span>
+                                    <span class="dimension-value">${item.result_value}</span>
+                                </div>
+                                <div class="dimension-item">
+                                    <span class="dimension-label">自我控制</span>
+                                    <span class="dimension-value">${item.self_control}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="history-result">
+                                <div class="result-item">
+                                    <span class="result-label">核心函数</span>
+                                    <span class="risk-badge risk-${item.risk_level.toLowerCase()}">${item.risk_level}</span>
+                                    <div style="font-size: 12px; color: #999; margin-top: 5px;">分数: ${item.score}</div>
+                                </div>
+                                <div class="result-item">
+                                    <span class="result-label">模型预测</span>
+                                    <span class="risk-badge risk-${item.model_predicted_level.toLowerCase()}">${item.model_predicted_level}</span>
+                                    <div style="font-size: 12px; color: #999; margin-top: 5px;">${item.match ? '✓ 一致' : '✗ 不一致'}</div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 8px; font-size: 14px; color: #666;">
+                                <strong>建议:</strong> ${item.suggestion}
+                            </div>
+                            
+                            <button class="view-report-btn" onclick='showHistoryReport(${JSON.stringify(item).replace(/'/g, "&#39;")})'>查看报告</button>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">❌</div>
+                        <div>加载失败，请重试</div>
+                    </div>
+                `;
+            }
+        }
+        
+        // 加载数据分析
+        async function loadAnalytics() {
+            const card = document.getElementById('analytics-card');
+            card.innerHTML = '<div class="loading">加载中</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/analytics`, {
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const analytics = data.analytics;
+                    
+                    card.innerHTML = `
+                        <div class="analytics-header">
+                            <h3>📊 你的探索数据</h3>
+                            <p>了解你的拖延模式</p>
+                        </div>
+                        
+                        <div class="analytics-grid">
+                            <div class="analytics-stat-card">
+                                <div class="analytics-stat-icon">📝</div>
+                                <div class="analytics-stat-number">${analytics.total_count}</div>
+                                <div class="analytics-stat-label">总评估次数</div>
+                            </div>
+                            
+                            <div class="analytics-stat-card">
+                                <div class="analytics-stat-icon">🔥</div>
+                                <div class="analytics-stat-number">${analytics.high_risk_ratio}%</div>
+                                <div class="analytics-stat-label">高风险占比</div>
+                            </div>
+                            
+                            <div class="analytics-stat-card">
+                                <div class="analytics-stat-icon">🎯</div>
+                                <div class="analytics-stat-number">${analytics.model_accuracy}%</div>
+                                <div class="analytics-stat-label">模型准确率</div>
+                            </div>
+                            
+                            <div class="analytics-stat-card">
+                                <div class="analytics-stat-icon">📈</div>
+                                <div class="analytics-stat-number">${analytics.avg_score}</div>
+                                <div class="analytics-stat-label">平均拖延分数</div>
+                            </div>
+                        </div>
+                        
+                        <div class="analytics-section">
+                            <div class="analytics-section-title">维度平均值</div>
+                            <div class="analytics-dimensions">
+                                <div class="analytics-dimension-card dimension-aversion">
+                                    <div class="value">${analytics.avg_dimensions.task_aversion}</div>
+                                    <div class="label">任务厌恶</div>
+                                </div>
+                                <div class="analytics-dimension-card dimension-value">
+                                    <div class="value">${analytics.avg_dimensions.result_value}</div>
+                                    <div class="label">结果价值</div>
+                                </div>
+                                <div class="analytics-dimension-card dimension-control">
+                                    <div class="value">${analytics.avg_dimensions.self_control}</div>
+                                    <div class="label">自我控制</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="analytics-section">
+                            <div class="analytics-section-title">风险等级分布</div>
+                            <div class="analytics-risk-distribution">
+                                <div class="analytics-risk-card risk-high">
+                                    <div class="count">${analytics.level_distribution.high}</div>
+                                    <div class="label">高风险</div>
+                                </div>
+                                <div class="analytics-risk-card risk-medium">
+                                    <div class="count">${analytics.level_distribution.medium}</div>
+                                    <div class="label">中风险</div>
+                                </div>
+                                <div class="analytics-risk-card risk-low">
+                                    <div class="count">${analytics.level_distribution.low}</div>
+                                    <div class="label">低风险</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="analytics-section">
+                            <div class="analytics-section-title">趋势分析</div>
+                            <div class="analytics-trend-container">
+                                <canvas id="trend-chart" style="width: 100%; height: 200px;"></canvas>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // 绘制趋势图
+                    if (analytics.total_count > 0) {
+                        drawTrendChart();
+                    }
+                }
+            } catch (error) {
+                card.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">加载失败</div>';
+            }
+        }
+        
+        // 绘制趋势图
+        async function drawTrendChart() {
+            try {
+                const response = await fetch(`${API_BASE}/history`, {
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.history.length > 0) {
+                    const history = data.history.slice(0, 10).reverse(); // 最近10条记录
+                    
+                    const canvas = document.getElementById('trend-chart');
+                    if (!canvas) return;
+                    
+                    const ctx = canvas.getContext('2d');
+                    const width = canvas.width = canvas.offsetWidth;
+                    const height = canvas.height = 220;
+                    
+                    // 清空画布
+                    ctx.clearRect(0, 0, width, height);
+                    
+                    // 绘制背景
+                    ctx.fillStyle = '#f5f5f5';
+                    ctx.fillRect(0, 0, width, height);
+                    
+                    // 绘制网格线
+                    ctx.strokeStyle = '#e0e0e0';
+                    ctx.lineWidth = 1;
+                    for (let i = 0; i <= 4; i++) {
+                        const y = 30 + (height - 70) * i / 4;
+                        ctx.beginPath();
+                        ctx.moveTo(50, y);
+                        ctx.lineTo(width - 20, y);
+                        ctx.stroke();
+                    }
+                    
+                    // 绘制Y轴标签（拖延分数）
+                    ctx.save();
+                    ctx.fillStyle = '#00897b';
+                    ctx.font = 'bold 11px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.translate(15, height / 2);
+                    ctx.rotate(-Math.PI / 2);
+                    ctx.fillText('拖延分数', 0, 0);
+                    ctx.restore();
+                    
+                    // 绘制Y轴刻度值
+                    ctx.fillStyle = '#666';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'right';
+                    for (let i = 0; i <= 4; i++) {
+                        const y = 30 + (height - 70) * i / 4;
+                        const value = 100 - i * 25;
+                        ctx.fillText(value.toString(), 45, y + 3);
+                    }
+                    
+                    // 绘制X轴标签（评估次数）
+                    ctx.fillStyle = '#00897b';
+                    ctx.font = 'bold 11px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('评估次数', width / 2, height - 5);
+                    
+                    // 绘制分数曲线
+                    if (history.length > 1) {
+                        const scores = history.map(h => h.score);
+                        const maxScore = Math.max(...scores, 100);
+                        const minScore = Math.min(...scores, 0);
+                        const range = maxScore - minScore || 1;
+                        
+                        ctx.strokeStyle = '#00897b';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        
+                        history.forEach((item, index) => {
+                            const x = 50 + (width - 70) * index / (history.length - 1);
+                            const y = 30 + (height - 70) * (1 - (item.score - minScore) / range);
+                            
+                            if (index === 0) {
+                                ctx.moveTo(x, y);
+                            } else {
+                                ctx.lineTo(x, y);
+                            }
+                        });
+                        
+                        ctx.stroke();
+                        
+                        // 绘制数据点和X轴刻度
+                        history.forEach((item, index) => {
+                            const x = 50 + (width - 70) * index / (history.length - 1);
+                            const y = 30 + (height - 70) * (1 - (item.score - minScore) / range);
+                            
+                            // 绘制数据点
+                            ctx.fillStyle = item.risk_level === '高' ? '#c62828' : 
+                                          item.risk_level === '中' ? '#ef6c00' : '#2e7d32';
+                            ctx.beginPath();
+                            ctx.arc(x, y, 5, 0, Math.PI * 2);
+                            ctx.fill();
+                            
+                            // 绘制X轴刻度（第几次评估）
+                            ctx.fillStyle = '#666';
+                            ctx.font = '9px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.fillText((index + 1).toString(), x, height - 25);
+                        });
+                    } else if (history.length === 1) {
+                        // 只有一条记录时
+                        const x = width / 2;
+                        const y = height / 2;
+                        
+                        ctx.fillStyle = history[0].risk_level === '高' ? '#c62828' : 
+                                      history[0].risk_level === '中' ? '#ef6c00' : '#2e7d32';
+                        ctx.beginPath();
+                        ctx.arc(x, y, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        ctx.fillStyle = '#666';
+                        ctx.font = '9px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('1', x, height - 25);
+                    }
+                    
+                    // 绘制图例
+                    ctx.fillStyle = '#666';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'left';
+                    
+                    // 高风险
+                    ctx.fillStyle = '#c62828';
+                    ctx.beginPath();
+                    ctx.arc(width - 100, 15, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#666';
+                    ctx.fillText('高风险', width - 92, 18);
+                    
+                    // 中风险
+                    ctx.fillStyle = '#ef6c00';
+                    ctx.beginPath();
+                    ctx.arc(width - 55, 15, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#666';
+                    ctx.fillText('中风险', width - 47, 18);
+                    
+                    // 低风险
+                    ctx.fillStyle = '#2e7d32';
+                    ctx.beginPath();
+                    ctx.arc(width - 100, 28, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#666';
+                    ctx.fillText('低风险', width - 92, 31);
+                }
+            } catch (error) {
+                console.error('绘制趋势图失败:', error);
+            }
+        }
+        
+        // 显示权重设置模态框
+        function showWeightModal() {
+            document.getElementById('weight-modal').classList.add('active');
+            
+            // 加载当前权重
+            fetch(`${API_BASE}/weights`, {credentials: 'include'})
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        document.getElementById('weight-w1').value = data.weights.w1;
+                        document.getElementById('weight-w2').value = data.weights.w2;
+                        document.getElementById('weight-w3').value = data.weights.w3;
+                    }
+                });
+        }
+        
+        // 关闭权重设置模态框
+        function closeWeightModal() {
+            document.getElementById('weight-modal').classList.remove('active');
+        }
+        
+        // 保存权重
+        async function saveWeights() {
+            const w1 = parseFloat(document.getElementById('weight-w1').value);
+            const w2 = parseFloat(document.getElementById('weight-w2').value);
+            const w3 = parseFloat(document.getElementById('weight-w3').value);
+            
+            if (Math.abs(w1 + w2 + w3 - 1.0) > 0.01) {
+                alert('权重总和必须等于1');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/weights`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
+                    body: JSON.stringify({w1, w2, w3})
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    updateWeightsDisplay(w1, w2, w3);
+                    closeWeightModal();
+                    alert('权重更新成功');
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('保存失败，请重试');
+            }
+        }
+        
+        // 格式化时间
+        function formatTime(timestamp) {
+            if (!timestamp) {
+                return '未知时间';
+            }
+            
+            let date;
+            
+            // 如果是数字，直接使用
+            if (typeof timestamp === 'number') {
+                date = new Date(timestamp);
+            } 
+            // 如果是字符串
+            else if (typeof timestamp === 'string') {
+                // 尝试解析ISO格式
+                date = new Date(timestamp);
+                // 如果解析失败，尝试替换空格为T
+                if (isNaN(date.getTime())) {
+                    date = new Date(timestamp.replace(' ', 'T'));
+                }
+                // 如果还是失败，尝试添加时区
+                if (isNaN(date.getTime())) {
+                    date = new Date(timestamp + 'Z');
+                }
+                // 最后尝试直接转换
+                if (isNaN(date.getTime())) {
+                    date = new Date(parseInt(timestamp));
+                }
+            }
+            // 如果是对象（Date类型）
+            else if (timestamp instanceof Date) {
+                date = timestamp;
+            }
+            // 其他情况
+            else {
+                return '未知时间';
+            }
+            
+            // 检查日期是否有效
+            if (isNaN(date.getTime())) {
+                return '未知时间';
+            }
+            
+            return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+        }
+    </script>
+</body>
+</html>

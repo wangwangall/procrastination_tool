@@ -1,0 +1,51 @@
+# 忽略Python编译文件
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 忽略数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 忽略日志文件
+*.log
+logs/
+
+# 忽略环境配置文件
+.env
+.env.local
+.env.*.local
+
+# 忽略IDE配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 忽略操作系统文件
+.DS_Store
+Thumbs.db
+
+# 忽略备份文件
+*.bak
+*.tmp
+*.old
+
+# 忽略大型文件
+model.pkl
+*.tar.gz
+*.zip
+
+# 忽略测试报告
+report_*.html
+
+# 忽略数据报告目录
+data/reports/
+
+# 忽略Windows批处理文件生成的内容
+*.bat
+
+# 忽略安装脚本生成的内容
+install_*.py

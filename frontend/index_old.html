@@ -1,0 +1,2417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拖延风险评估工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4a6fa5;
+            margin-bottom: 30px;
+        }
+        
+        /* 用户认证样式 */
+        .auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .auth-form {
+            margin-top: 20px;
+        }
+        
+        .auth-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        
+        .auth-btn:hover {
+            background-color: #3a5a8a;
+        }
+        
+        .auth-switch {
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .auth-switch a {
+            color: #4a6fa5;
+            text-decoration: none;
+        }
+        
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+        
+        /* 用户信息栏 */
+        .user-info {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .user-info .username {
+            font-weight: bold;
+            color: #4a6fa5;
+        }
+        
+        .user-info .logout-btn {
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .user-info .logout-btn:hover {
+            background-color: #c9302c;
+        }
+        
+        /* 历史记录样式 */
+        .history-section {
+            margin-top: 30px;
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .history-btn {
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .history-btn:hover {
+            background-color: #4cae4c;
+        }
+        
+        .history-list {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-item .timestamp {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .history-item .metrics {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+        
+        .history-item .probability {
+            font-weight: bold;
+        }
+        
+        /* 底部导航栏样式 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            color: #666;
+            padding: 5px 20px;
+        }
+        
+        .nav-item.active {
+            color: #4a6fa5;
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .nav-text {
+            font-size: 12px;
+        }
+        
+        /* 内容区域样式 */
+        .content-area {
+            margin-bottom: 70px; /* 为底部导航栏留出空间 */
+        }
+        
+        /* 标签页内容样式 */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 我的页面样式 */
+        .profile-section {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 30px 20px;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 20px;
+        }
+        
+        .profile-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a6fa5;
+            font-size: 24px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .profile-details h3 {
+            margin: 0 0 5px 0;
+        }
+        
+        .profile-details p {
+            margin: 0;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        
+        .menu-section {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+        
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+        
+        .menu-item:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .menu-icon {
+            font-size: 18px;
+            margin-right: 10px;
+        }
+        
+        .menu-text {
+            flex: 1;
+        }
+        
+        .menu-arrow {
+            font-size: 14px;
+            color: #999;
+        }
+        
+        .logout-btn {
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            width: 90%;
+            margin: 20px auto;
+            display: block;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .logout-btn:hover {
+            background-color: #c9302c;
+        }
+        
+        /* 数据分析页面样式 */
+        .analytics-section {
+            padding: 20px 0;
+        }
+        
+        .analytics-cards {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .analytics-card {
+            flex: 1;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 0 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .card-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .card-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a6fa5;
+        }
+        
+        .analytics-details {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .analytics-details h3 {
+            margin-bottom: 20px;
+            color: #4a6fa5;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .detail-label {
+            width: 120px;
+            font-size: 14px;
+        }
+        
+        .detail-bar {
+            flex: 1;
+            height: 8px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            margin: 0 10px;
+            overflow: hidden;
+        }
+        
+        .bar {
+            height: 100%;
+            background-color: #4a6fa5;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .detail-value {
+            width: 40px;
+            text-align: right;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .analytics-chart {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .analytics-chart h3 {
+            margin-bottom: 20px;
+            color: #4a6fa5;
+        }
+        
+        #trend-chart {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            position: relative;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4a6fa5;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4a6fa5;
+            cursor: pointer;
+        }
+        
+        .value-display {
+            text-align: right;
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        button:hover {
+            background-color: #3a5a8a;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid #4a6fa5;
+        }
+        
+        .risk-level {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .suggestion {
+            font-style: italic;
+            line-height: 1.5;
+        }
+        
+        .error {
+            color: #d9534f;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        /* 悬浮提示框样式 */
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #4a6fa5;
+            color: white;
+            text-align: center;
+            line-height: 16px;
+            font-size: 12px;
+            cursor: help;
+            margin-left: 8px;
+        }
+        
+        .tooltip {
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 300px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .tooltip-container:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        
+        /* 极端值特征显示 */
+        .extreme-feature {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .extreme-feature.low {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .extreme-feature.high {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        /* 用户同意界面样式 */
+        .consent-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .consent-content {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .consent-content h2 {
+            color: #4a6fa5;
+            margin-bottom: 20px;
+        }
+        
+        .consent-content p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .consent-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        .consent-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .consent-btn.agree {
+            background-color: #4a6fa5;
+            color: white;
+            margin-right: 10px;
+        }
+        
+        .consent-btn.disagree {
+            background-color: #d9534f;
+            color: white;
+        }
+        
+        /* 反馈收集组件样式 */
+        .feedback-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid #4a6fa5;
+        }
+        
+        .feedback-container h3 {
+            margin-bottom: 15px;
+            color: #4a6fa5;
+        }
+        
+        .feedback-buttons {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        .feedback-btn {
+            flex: 1;
+            padding: 10px;
+            margin: 0 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        .feedback-btn.active {
+            background-color: #4a6fa5;
+            color: white;
+            border-color: #4a6fa5;
+        }
+        
+        .feedback-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            min-height: 80px;
+            margin-bottom: 15px;
+        }
+        
+        .submit-feedback-btn {
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .submit-feedback-btn:hover {
+            background-color: #4cae4c;
+        }
+        
+        .feedback-success {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #d4edda;
+            color: #155724;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        /* 结果对比样式 */
+        .result-comparison {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #4a6fa5;
+        }
+        
+        .result-comparison h3 {
+            color: #4a6fa5;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .core-result {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .model-result {
+            background-color: #e8f5e8;
+            border-left: 4px solid #4caf50;
+            margin-top: 20px;
+        }
+        
+        .result h4 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .result-details {
+            margin-top: 10px;
+        }
+        
+        .result-details div {
+            margin: 8px 0;
+        }
+        
+        .comparison-result {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        
+        .comparison-status {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .comparison-message {
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        .suggestion-section {
+            margin-top: 20px;
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .suggestion-section h4 {
+            margin-top: 0;
+            color: #17a2b8;
+        }
+        
+        /* 权重设置样式 */
+        .weights-settings {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .weights-settings h3 {
+            color: #495057;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .weights-settings .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .weights-settings label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .weights-sum {
+            text-align: right;
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+        
+        /* 按钮组样式 */
+        .weights-settings button {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                max-width: 100%;
+                margin: 20px 10px;
+                padding: 15px;
+            }
+            
+            .auth-container {
+                max-width: 90%;
+                margin: 30px auto;
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+            
+            .form-group {
+                margin-bottom: 15px;
+            }
+            
+            button {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .result {
+                margin-top: 20px;
+                padding: 15px;
+            }
+            
+            .history-list {
+                max-height: 250px;
+            }
+            
+            .analytics-cards {
+                flex-direction: column;
+            }
+            
+            .analytics-card {
+                margin: 5px 0;
+            }
+            
+            .consent-content {
+                padding: 20px;
+            }
+            
+            .feedback-buttons {
+                flex-direction: column;
+            }
+            
+            .feedback-btn {
+                margin: 5px 0;
+            }
+            
+            .weights-settings button {
+                width: 100%;
+                margin-right: 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .nav-text {
+                font-size: 10px;
+            }
+            
+            .nav-icon {
+                font-size: 16px;
+            }
+            
+            .nav-item {
+                padding: 5px 10px;
+            }
+            
+            .profile-section {
+                padding: 20px 15px;
+            }
+            
+            .avatar {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            
+            .menu-item {
+                padding: 12px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 用户同意界面 -->
+    <div id="consent-container" class="consent-container">
+        <div class="consent-content">
+            <h2>数据收集同意</h2>
+            <p>尊敬的用户：</p>
+            <p>为了提供更个性化的服务和改进我们的工具，我们需要收集以下数据：</p>
+            <ul>
+                <li>您的评估数据（任务厌恶度、结果价值感、自我控制能力）</li>
+                <li>您对建议的反馈</li>
+                <li>您的使用习惯和行为数据</li>
+            </ul>
+            <p>我们承诺：</p>
+            <ul>
+                <li>所有数据将匿名化处理，不会包含您的个人身份信息</li>
+                <li>数据仅用于改进工具和学术研究</li>
+                <li>不会将数据用于商业目的</li>
+                <li>您可以随时停止使用工具，我们将不再收集您的数据</li>
+            </ul>
+            <p>如果您同意我们收集和使用您的数据，请点击"同意"按钮。如果您不同意，您仍然可以使用工具的基本功能，但无法获得个性化的建议。</p>
+            <div class="consent-buttons">
+                <button class="consent-btn agree" id="consent-agree">同意</button>
+                <button class="consent-btn disagree" id="consent-disagree">不同意</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 认证界面 -->
+    <div id="auth-container" class="auth-container" style="display: none;">
+        <h1>用户认证</h1>
+        
+        <!-- 登录表单 -->
+        <div id="login-form" class="auth-form">
+            <h3>登录</h3>
+            <input type="text" id="login-identifier" class="auth-input" placeholder="手机号/邮箱">
+            <input type="password" id="login-password" class="auth-input" placeholder="密码">
+            <button id="login-btn" class="auth-btn">登录</button>
+            <div class="auth-switch">
+                还没有账户？ <a href="#" id="switch-to-register">注册</a>
+            </div>
+            <div class="auth-switch">
+                <a href="#" id="forgot-password">忘记密码？</a>
+            </div>
+            <div class="error" id="auth-error" style="display: none;"></div>
+        </div>
+        
+        <!-- 注册表单 -->
+        <div id="register-form" class="auth-form" style="display: none;">
+            <h3>注册</h3>
+            <input type="text" id="register-phone" class="auth-input" placeholder="手机号（可选）">
+            <input type="email" id="register-email" class="auth-input" placeholder="邮箱（可选）">
+            <input type="text" id="register-username" class="auth-input" placeholder="昵称">
+            <input type="password" id="register-password" class="auth-input" placeholder="密码">
+            <button id="register-btn" class="auth-btn">注册</button>
+            <div class="auth-switch">
+                已有账户？ <a href="#" id="switch-to-login">登录</a>
+            </div>
+            <div class="error" id="register-error" style="display: none;"></div>
+        </div>
+        
+        <!-- 忘记密码表单 -->
+        <div id="forgot-password-form" class="auth-form" style="display: none;">
+            <h3>忘记密码</h3>
+            <input type="text" id="reset-identifier" class="auth-input" placeholder="手机号/邮箱">
+            <button id="reset-request-btn" class="auth-btn">发送重置链接</button>
+            <div class="auth-switch">
+                <a href="#" id="switch-to-login-from-reset">返回登录</a>
+            </div>
+            <div class="error" id="reset-error" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <!-- 主应用界面 -->
+    <div id="app-container" class="container" style="display: none;">
+        <div class="content-area">
+            <!-- 风险评估页面 -->
+            <div class="tab-content active" id="assessment-tab">
+                <h1>拖延风险评估</h1>
+                
+                <!-- 醒目提醒 -->
+                <div style="background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 8px; padding: 15px; margin-bottom: 25px; display: flex; align-items: center;">
+                    <span style="font-size: 24px; margin-right: 15px;">⚠️</span>
+                    <div>
+                        <strong style="color: #856404;">重要提醒：</strong>
+                        <span style="color: #856404;">请务必点击每个维度右侧的 <span class="tooltip-icon" style="margin-left: 5px;">?</span> 查看详细解释后再进行评分，以确保评估结果的准确性！</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="task-aversion">
+                        任务厌恶程度 (0-100)
+                        <div class="tooltip-container">
+                            <span class="tooltip-icon">?</span>
+                            <div class="tooltip">
+                                <strong>任务厌恶程度</strong> 0-100分<br>
+                                衡量「执行任务过程中你的抵触程度」，10分=完全享受过程，100分=极度厌恶想逃避
+                            </div>
+                        </div>
+                    </label>
+                    <input type="range" id="task-aversion" min="0" max="100" value="50">
+                    <div class="value-display" id="task-aversion-value">50</div>
+                    <div class="extreme-feature" id="task-aversion-feature"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="result-value">
+                        结果价值感 (0-100)
+                        <div class="tooltip-container">
+                            <span class="tooltip-icon">?</span>
+                            <div class="tooltip">
+                                <strong>结果价值感</strong> 0-100分<br>
+                                衡量「完成后这件事对你的价值高低」，10分=毫无价值，100分=关乎重大利益/价值观
+                            </div>
+                        </div>
+                    </label>
+                    <input type="range" id="result-value" min="0" max="100" value="50">
+                    <div class="value-display" id="result-value-value">50</div>
+                    <div class="extreme-feature" id="result-value-feature"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="self-control">
+                        自我控制能力 (0-100)
+                        <div class="tooltip-container">
+                            <span class="tooltip-icon">?</span>
+                            <div class="tooltip">
+                                <strong>自我控制能力</strong> 0-100分<br>
+                                衡量「你能多大程度克制分心/拖延倾向，而不是本身自我评价或外界评价的无自控力的刻板印象」，10分=完全无法自控，100分=钢铁般自律
+                            </div>
+                        </div>
+                    </label>
+                    <input type="range" id="self-control" min="0" max="100" value="50">
+                    <div class="value-display" id="self-control-value">50</div>
+                    <div class="extreme-feature" id="self-control-feature"></div>
+                </div>
+                
+                <button id="predict-btn">评估风险</button>
+                
+                <!-- 结果对比显示 -->
+                <div class="result-comparison" id="result-comparison" style="display: none;">
+                    <h3>📊 结果对比</h3>
+                    
+                    <!-- 核心函数结果 -->
+                    <div class="result core-result">
+                        <h4>🔧 你的核心函数测算结果</h4>
+                        <div class="result-details">
+                            <div class="risk-level">风险等级: <span id="core-risk-level"></span></div>
+                            <div class="score">拖延概率: <span id="core-score"></span>%</div>
+                            <div class="weights">当前权重: w1=<span id="current-w1"></span>, w2=<span id="current-w2"></span>, w3=<span id="current-w3"></span></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 模型预测结果 -->
+                    <div class="result model-result">
+                        <h4>🤖 你的模型模拟结果</h4>
+                        <div class="result-details">
+                            <div class="risk-level">预测等级: <span id="model-prediction"></span></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 对比结果 -->
+                    <div class="comparison-result" id="comparison-result">
+                        <h4>🔍 对比分析</h4>
+                        <div class="comparison-status" id="comparison-status"></div>
+                        <div class="comparison-message" id="comparison-message"></div>
+                    </div>
+                    
+                    <!-- 建议 -->
+                    <div class="suggestion-section">
+                        <h4>💡 建议</h4>
+                        <div class="suggestion" id="suggestion"></div>
+                    </div>
+                </div>
+                
+
+                
+                <!-- 反馈收集组件 -->
+                <div class="feedback-container" id="feedback-container" style="display: none;">
+                    <h3>反馈</h3>
+                    <p>这个建议对您有帮助吗？</p>
+                    <div class="feedback-buttons">
+                        <button class="feedback-btn" data-feedback="1">有用</button>
+                        <button class="feedback-btn" data-feedback="2">部分有用</button>
+                        <button class="feedback-btn" data-feedback="0">没用</button>
+                    </div>
+                    <textarea class="feedback-input" placeholder="请输入您的具体反馈（可选）"></textarea>
+                    <button class="submit-feedback-btn">提交反馈</button>
+                    <div class="feedback-success" id="feedback-success">
+                        感谢您的反馈！
+                    </div>
+                </div>
+                
+                <div class="error" id="error" style="display: none;"></div>
+            </div>
+            
+            <!-- 历史记录页面 -->
+            <div class="tab-content" id="history-tab">
+                <h1>评估历史</h1>
+                <div class="history-section">
+                    <div class="history-header">
+                        <button class="history-btn" id="refresh-history">刷新记录</button>
+                    </div>
+                    <div class="history-list" id="history-list">
+                        <!-- 历史记录将通过JS动态添加 -->
+                    </div>
+                    <div class="error" id="history-error" style="display: none;"></div>
+                </div>
+            </div>
+            
+            <!-- 我的页面 -->
+            <div class="tab-content" id="profile-tab">
+                <div class="profile-section">
+                    <div class="profile-info">
+                        <div class="avatar" id="avatar">
+                            <span id="avatar-text">U</span>
+                        </div>
+                        <div class="profile-details">
+                            <h3 id="username-display">用户</h3>
+                            <p>拖延风险评估工具用户</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="menu-section">
+                    <div class="menu-item" id="analytics-menu">
+                        <div class="menu-icon">📊</div>
+                        <div class="menu-text">数据分析</div>
+                        <div class="menu-arrow">›</div>
+                    </div>
+                    <div class="menu-item" id="settings-menu">
+                        <div class="menu-icon">⚙️</div>
+                        <div class="menu-text">设置</div>
+                        <div class="menu-arrow">›</div>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon">ℹ️</div>
+                        <div class="menu-text">关于</div>
+                        <div class="menu-arrow">›</div>
+                    </div>
+                </div>
+                
+                <!-- 设置内容 -->
+                <div id="settings-content" class="settings-content" style="display: none; margin-top: 20px; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+                    <h2 style="color: #4a6fa5; margin-bottom: 20px;">⚙️ 核心函数权重设置</h2>
+                    <div class="weights-settings" id="weights-settings">
+                        <div class="form-group">
+                            <label for="w1">任务厌恶权重 (w1): <span id="w1-value">0.4</span></label>
+                            <input type="range" id="w1" min="0" max="1" step="0.1" value="0.4">
+                        </div>
+                        <div class="form-group">
+                            <label for="w2">结果价值权重 (w2): <span id="w2-value">0.3</span></label>
+                            <input type="range" id="w2" min="0" max="1" step="0.1" value="0.3">
+                        </div>
+                        <div class="form-group">
+                            <label for="w3">自我控制权重 (w3): <span id="w3-value">0.3</span></label>
+                            <input type="range" id="w3" min="0" max="1" step="0.1" value="0.3">
+                        </div>
+                        <div class="weights-sum" style="text-align: right; font-weight: bold; margin-top: 15px; margin-bottom: 20px;">总权重: <span id="weights-sum">1.0</span></div>
+                        <div style="display: flex; gap: 10px;">
+                            <button id="save-weights-btn" style="flex: 1; padding: 10px; background-color: #4a6fa5; color: white; border: none; border-radius: 4px; cursor: pointer;">保存权重</button>
+                            <button id="reset-weights-btn" style="flex: 1; padding: 10px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">重置默认权重</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="logout-btn" id="logout-btn">登出</button>
+            </div>
+            
+            <!-- 数据分析页面 -->
+            <div class="tab-content" id="analytics-tab">
+                <h1>数据分析</h1>
+                
+                <div class="analytics-section">
+                    <div class="analytics-cards">
+                        <div class="analytics-card">
+                            <div class="card-title">总评估次数</div>
+                            <div class="card-value" id="total-records">0</div>
+                        </div>
+                        <div class="analytics-card">
+                            <div class="card-title">平均拖延概率</div>
+                            <div class="card-value" id="average-probability">0%</div>
+                        </div>
+                        <div class="analytics-card">
+                            <div class="card-title">拖延率</div>
+                            <div class="card-value" id="delay-rate">0%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-details">
+                        <h3>维度分析 <span style="font-size: 12px; color: #666; font-weight: normal;">(所有评估的平均值)</span></h3>
+                        <div class="detail-item">
+                            <div class="detail-label">任务厌恶度</div>
+                            <div class="detail-bar">
+                                <div class="bar" id="analytics-task-aversion-bar" style="width: 0%"></div>
+                            </div>
+                            <div class="detail-value" id="analytics-task-aversion-value">--</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">结果价值感</div>
+                            <div class="detail-bar">
+                                <div class="bar" id="analytics-result-value-bar" style="width: 0%"></div>
+                            </div>
+                            <div class="detail-value" id="analytics-result-value-value">--</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">自我控制能力</div>
+                            <div class="detail-bar">
+                                <div class="bar" id="analytics-self-control-bar" style="width: 0%"></div>
+                            </div>
+                            <div class="detail-value" id="analytics-self-control-value">--</div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-chart">
+                        <h3>拖延趋势 <span style="font-size: 12px; color: #666; font-weight: normal;">(最近10次评估)</span></h3>
+                        <div id="trend-chart" style="height: 200px; margin-top: 20px; position: relative;"></div>
+                    </div>
+                    
+                    <button class="history-btn" id="refresh-analytics">刷新数据</button>
+                </div>
+                
+                <div class="error" id="analytics-error" style="display: none;"></div>
+            </div>
+        </div>
+        
+        <!-- 底部导航栏 -->
+        <div class="bottom-nav">
+            <div class="nav-item active" data-tab="assessment">
+                <div class="nav-icon">📝</div>
+                <div class="nav-text">评估</div>
+            </div>
+            <div class="nav-item" data-tab="history">
+                <div class="nav-icon">📋</div>
+                <div class="nav-text">历史</div>
+            </div>
+            <div class="nav-item" data-tab="profile">
+                <div class="nav-icon">👤</div>
+                <div class="nav-text">我的</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 获取cookie值
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+        
+        // 极端值特征描述
+        const extremeFeatures = {
+            'task-aversion': {
+                low: '你非常享受这类任务，执行过程对你来说是一种乐趣。',
+                high: '你对这类任务有强烈的抵触情绪，可能需要分解任务或寻找替代方法。'
+            },
+            'result-value': {
+                low: '完成这个任务对你几乎没有价值，考虑是否真的需要做。',
+                high: '这个任务对你非常重要，关乎重大利益或价值观，值得投入精力。'
+            },
+            'self-control': {
+                low: '你在面对这个任务时容易分心，需要外部约束或环境调整。',
+                high: '你有很强的自律能力，能够专注完成任务，不受外界干扰。'
+            }
+        };
+        
+        // Update range input values and show extreme features
+        const sliders = ['task-aversion', 'result-value', 'self-control'];
+        sliders.forEach(id => {
+            const slider = document.getElementById(id);
+            const valueDisplay = document.getElementById(`${id}-value`);
+            const featureDisplay = document.getElementById(`${id}-feature`);
+            
+            slider.addEventListener('input', function() {
+                const value = this.value;
+                valueDisplay.textContent = value;
+                
+                // 显示极端值特征
+                if (value <= 20) {
+                    featureDisplay.textContent = extremeFeatures[id].low;
+                    featureDisplay.className = 'extreme-feature low';
+                    featureDisplay.style.display = 'block';
+                } else if (value >= 80) {
+                    featureDisplay.textContent = extremeFeatures[id].high;
+                    featureDisplay.className = 'extreme-feature high';
+                    featureDisplay.style.display = 'block';
+                } else {
+                    featureDisplay.style.display = 'none';
+                }
+            });
+        });
+        
+        // 收集测试来源（简单实现，实际项目中可能需要更复杂的逻辑）
+        function getTestSource() {
+            // 检查URL参数
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('source')) {
+                return urlParams.get('source');
+            }
+            // 检查referrer
+            if (document.referrer) {
+                const referrer = document.referrer.toLowerCase();
+                if (referrer.includes('douyin')) return '抖音';
+                if (referrer.includes('video')) return '视频号';
+                if (referrer.includes('xiaohongshu')) return '小红书';
+                if (referrer.includes('feishu')) return '飞书';
+            }
+            // 默认值
+            return '直接访问';
+        }
+        
+        // 上报数据到后端
+        async function reportData(taskAversion, resultValue, selfControl, source, delayProbability) {
+            try {
+                const payload = {
+                    task_aversion: parseInt(taskAversion),
+                    result_value: parseInt(resultValue),
+                    self_control: parseInt(selfControl),
+                    timestamp: new Date().toISOString(),
+                    source: source,
+                    delay_probability: delayProbability
+                };
+                
+                await fetch('http://localhost:5001/report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include', // 包含cookie，用于用户认证
+                    body: JSON.stringify(payload)
+                });
+            } catch (error) {
+                console.log('数据上报失败:', error);
+                // 上报失败不影响评估结果的显示
+            }
+        }
+        
+
+        
+        // 检查用户登录状态
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('http://localhost:5001/user', {
+                    method: 'GET',
+                    credentials: 'include' // 包含cookie
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        // 用户已登录，显示主应用界面
+                        document.getElementById('auth-container').style.display = 'none';
+                        document.getElementById('app-container').style.display = 'block';
+                        
+                        // 更新用户名和头像
+                        const username = data.username;
+                        document.getElementById('username-display').textContent = username;
+                        
+                        // 生成头像文本（取用户名的第一个字符）
+                        const avatarText = username.charAt(0).toUpperCase();
+                        document.getElementById('avatar-text').textContent = avatarText;
+                        
+                        return true;
+                    }
+                }
+                // 暂时不强制要求登录，直接显示主应用界面
+                // document.getElementById('auth-container').style.display = 'block';
+                document.getElementById('app-container').style.display = 'block';
+                document.getElementById('auth-container').style.display = 'none';
+                return true;
+            } catch (error) {
+                console.log('检查登录状态失败:', error);
+                // 出错时也直接显示主应用界面
+                document.getElementById('app-container').style.display = 'block';
+                document.getElementById('auth-container').style.display = 'none';
+                return true;
+            }
+        }
+        
+        // 登录功能
+        async function login(identifier, password) {
+            try {
+                const response = await fetch('http://localhost:5001/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include', // 包含cookie
+                    body: JSON.stringify({ identifier, password })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    // 登录成功，显示主应用界面
+                    document.getElementById('auth-container').style.display = 'none';
+                    document.getElementById('app-container').style.display = 'block';
+                    
+                    // 更新用户名和头像
+                    document.getElementById('username-display').textContent = data.username;
+                    const avatarText = data.username.charAt(0).toUpperCase();
+                    document.getElementById('avatar-text').textContent = avatarText;
+                    
+                    return true;
+                } else {
+                    // 登录失败，显示错误信息
+                    document.getElementById('auth-error').textContent = data.error || '登录失败';
+                    document.getElementById('auth-error').style.display = 'block';
+                    return false;
+                }
+            } catch (error) {
+                console.log('登录失败:', error);
+                document.getElementById('auth-error').textContent = '登录失败，请稍后重试';
+                document.getElementById('auth-error').style.display = 'block';
+                return false;
+            }
+        }
+        
+        // 注册功能
+        async function register(phone, email, username, password) {
+            try {
+                const response = await fetch('http://localhost:5001/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include', // 包含cookie
+                    body: JSON.stringify({ phone, email, username, password })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    // 注册成功，显示主应用界面
+                    document.getElementById('auth-container').style.display = 'none';
+                    document.getElementById('app-container').style.display = 'block';
+                    
+                    // 更新用户名和头像
+                    document.getElementById('username-display').textContent = data.username;
+                    const avatarText = data.username.charAt(0).toUpperCase();
+                    document.getElementById('avatar-text').textContent = avatarText;
+                    
+                    return true;
+                } else {
+                    // 注册失败，显示错误信息
+                    document.getElementById('register-error').textContent = data.error || '注册失败';
+                    document.getElementById('register-error').style.display = 'block';
+                    return false;
+                }
+            } catch (error) {
+                console.log('注册失败:', error);
+                document.getElementById('register-error').textContent = '注册失败，请稍后重试';
+                document.getElementById('register-error').style.display = 'block';
+                return false;
+            }
+        }
+        
+        // 忘记密码请求功能
+        async function requestPasswordReset(identifier) {
+            try {
+                const response = await fetch('http://localhost:5001/reset-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ identifier })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    // 发送成功，显示提示
+                    document.getElementById('reset-error').textContent = '重置链接已发送';
+                    document.getElementById('reset-error').style.color = '#28a745';
+                    document.getElementById('reset-error').style.display = 'block';
+                    return true;
+                } else {
+                    // 发送失败，显示错误信息
+                    document.getElementById('reset-error').textContent = data.error || '发送失败';
+                    document.getElementById('reset-error').style.color = '#d9534f';
+                    document.getElementById('reset-error').style.display = 'block';
+                    return false;
+                }
+            } catch (error) {
+                console.log('发送重置请求失败:', error);
+                document.getElementById('reset-error').textContent = '发送失败，请稍后重试';
+                document.getElementById('reset-error').style.color = '#d9534f';
+                document.getElementById('reset-error').style.display = 'block';
+                return false;
+            }
+        }
+        
+        // 登出功能
+        async function logout() {
+            try {
+                const response = await fetch('http://localhost:5001/logout', {
+                    method: 'POST',
+                    credentials: 'include' // 包含cookie
+                });
+                
+                // 无论成功失败，都显示认证界面
+                document.getElementById('auth-container').style.display = 'block';
+                document.getElementById('app-container').style.display = 'none';
+            } catch (error) {
+                console.log('登出失败:', error);
+                // 出错时也显示认证界面
+                document.getElementById('auth-container').style.display = 'block';
+                document.getElementById('app-container').style.display = 'none';
+            }
+        }
+        
+        // 加载历史记录
+        async function loadHistory() {
+            try {
+                console.log('=== 开始加载历史记录 ===');
+                
+                // 1. 获取持久化的匿名ID
+                const anonymousId = getPersistentAnonymousId();
+                console.log('1. 使用的持久化匿名ID:', anonymousId);
+                
+                // 2. 直接在URL中传递匿名ID，解决跨域cookie问题
+                const url = `http://localhost:5001/history?anonymous_id=${anonymousId}`;
+                console.log('2. 请求URL:', url);
+                
+                // 3. 构建请求
+                console.log('3. 准备发送请求...');
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Anonymous-ID': anonymousId // 添加自定义头部
+                    },
+                    mode: 'cors',
+                    credentials: 'include'
+                });
+                
+                console.log('4. 响应状态:', response.status);
+                
+                // 打印完整的响应头
+                const headers = {};
+                for (const [key, value] of response.headers) {
+                    headers[key] = value;
+                }
+                console.log('5. 响应头:', headers);
+                
+                // 检查响应是否成功
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('6. 响应错误:', errorText);
+                    throw new Error(`加载历史记录失败: ${response.status} ${errorText}`);
+                }
+                
+                // 解析响应数据
+                console.log('7. 开始解析响应数据...');
+                const data = await response.json();
+                console.log('8. 完整响应数据:', JSON.stringify(data, null, 2));
+                
+                if (data.status === 'success') {
+                    const historyList = document.getElementById('history-list');
+                    console.log('9. 历史记录列表元素:', historyList);
+                    
+                    // 清空历史记录列表和错误信息
+                    historyList.innerHTML = '';
+                    document.getElementById('history-error').style.display = 'none';
+                    
+                    const historyData = data.history || [];
+                    console.log('10. 历史记录数量:', historyData.length);
+                    console.log('11. 历史记录数据:', JSON.stringify(historyData, null, 2));
+                    
+                    if (historyData.length === 0) {
+                        console.log('12. 没有历史记录，显示提示信息');
+                        historyList.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">暂无历史记录</div>';
+                        return;
+                    }
+                    
+                    console.log('13. 开始渲染历史记录...');
+                    
+                    // 为每条历史记录创建DOM元素
+                    historyData.forEach((record, index) => {
+                        console.log(`14. 渲染第${index + 1}条记录:`, record);
+                        const item = document.createElement('div');
+                        item.className = 'history-item';
+                        
+                        // 使用保存的预测结果
+                        const taskAversion = record.task_aversion || 50;
+                        const resultValue = record.result_value;
+                        const selfControl = record.self_control;
+                        const score = record.score; // 使用保存的分数
+                        const riskLevel = record.risk_level; // 使用保存的风险等级
+                        const probability = score / 100; // 计算概率
+                        
+                        // 格式化时间戳
+                        const formattedTime = new Date(record.timestamp).toLocaleString('zh-CN');
+                        console.log('15. 格式化时间:', formattedTime);
+                        
+                        // 脱敏匿名ID，只显示前8个字符
+                        const脱敏匿名ID = record.anonymous_id ? record.anonymous_id.substring(0, 8) + '...' : '匿名用户';
+                        
+                        // 计算差异值
+                        let差异值 = '';
+                        if (record.model_prediction && record.risk_level) {
+                            const模型等级映射 = { '低': 0, '中': 1, '高': 2 };
+                            const核心等级 = 模型等级映射[record.risk_level] || 0;
+                            const预测等级 = 模型等级映射[record.model_prediction] || 0;
+                            const差异 = 预测等级 - 核心等级;
+                            差异值 = `差异值: ${差异 > 0 ? '+' : ''}${差异}`;
+                        }
+                        
+                        item.innerHTML = `
+                            <div class="timestamp">${formattedTime}</div>
+                            <div style="margin: 10px 0; font-size: 14px; color: #666;">匿名ID: ${脱敏匿名ID}</div>
+                            <div class="metrics">
+                                <span>任务厌恶: ${taskAversion}</span>
+                                <span>结果价值: ${resultValue}</span>
+                                <span>自我控制: ${selfControl}</span>
+                            </div>
+                            <div class="metrics" style="margin: 8px 0;">
+                                <span>核心函数结果: ${record.risk_level} (${score.toFixed(1)}%)</span>
+                                <span>模型预测: ${record.model_prediction || '无'}</span>
+                                <span>${差异值}</span>
+                            </div>
+                            <div style="margin: 8px 0; padding: 10px; background-color: #f0f8ff; border-radius: 4px; font-size: 14px;">
+                                <strong>建议:</strong> ${record.suggestion}
+                            </div>
+                            <div style="margin-top: 10px; text-align: right;">
+                                <button class="view-report-btn" style="padding: 5px 15px; background-color: #4a6fa5; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 10px;">查看报告</button>
+                            </div>
+                        `;
+                        
+                        // 添加查看报告按钮的点击事件
+                        const viewReportBtn = item.querySelector('.view-report-btn');
+                        viewReportBtn.addEventListener('click', () => {
+                            console.log('16. 查看报告按钮点击:', record.id);
+                            console.log('17. 报告路径:', record.report_path);
+                            
+                            if (record.report_path) {
+                                // 提取报告文件名
+                                const reportFilename = record.report_path.split('\\').pop();
+                                // 构建报告URL，注意路径格式
+                                const reportUrl = `http://localhost:5001/data/reports/${reportFilename}`;
+                                console.log('18. 报告URL:', reportUrl);
+                                // 在新窗口打开报告
+                                window.open(reportUrl, '_blank');
+                            } else {
+                                // 如果没有报告路径，使用原来的方式生成报告
+                                console.log('18. 没有报告路径，使用原来的方式生成报告');
+                                // 构建报告数据对象，使用保存的完整评估结果
+                                const reportData = {
+                                    timestamp: record.timestamp,
+                                    anonymous_id: record.anonymous_id || 'anonymous',
+                                    core_function_result: {
+                                        风险等级: record.risk_level,
+                                        分数: record.score.toFixed(1),
+                                        权重: {
+                                            w1: record.w1,
+                                            w2: record.w2,
+                                            w3: record.w3
+                                        }
+                                    },
+                                    model_prediction: record.model_prediction || record.risk_level,
+                                    comparison: record.comparison || '一致',
+                                    建议: record.suggestion
+                                };
+                                
+                                console.log('19. 构建的报告数据:', reportData);
+                                
+                                // 将数据转换为URL参数
+                                const dataStr = JSON.stringify(reportData);
+                                const encodedData = encodeURIComponent(dataStr);
+                                
+                                // 跳转到报告页面
+                                window.location.href = `report.html?data=${encodedData}`;
+                            }
+                        });
+                        
+                        console.log('18. 添加记录到DOM');
+                        historyList.appendChild(item);
+                    });
+                    
+                    console.log('19. 历史记录渲染完成');
+                } else if (data.error) {
+                    console.error('20. API返回错误:', data.error);
+                    document.getElementById('history-error').textContent = data.error || '加载历史记录失败';
+                    document.getElementById('history-error').style.display = 'block';
+                } else {
+                    console.error('21. 历史记录API响应格式错误:', data);
+                    document.getElementById('history-error').textContent = '加载历史记录失败，请稍后重试';
+                    document.getElementById('history-error').style.display = 'block';
+                }
+            } catch (error) {
+                console.log('加载历史记录失败:', error);
+                document.getElementById('history-error').textContent = '加载历史记录失败，请稍后重试';
+                document.getElementById('history-error').style.display = 'block';
+            }
+        }
+        
+        // 获取用户权重并更新UI
+        async function loadUserWeights() {
+            try {
+                const response = await fetch('http://localhost:5001/user-weights', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        const weights = data.weights;
+                        document.getElementById('w1').value = weights.w1;
+                        document.getElementById('w2').value = weights.w2;
+                        document.getElementById('w3').value = weights.w3;
+                        updateWeightDisplay();
+                        updateWeightsSum();
+                    }
+                }
+            } catch (error) {
+                console.log('加载权重失败:', error);
+            }
+        }
+        
+        // 更新权重显示
+        function updateWeightDisplay() {
+            document.getElementById('w1-value').textContent = parseFloat(document.getElementById('w1').value).toFixed(1);
+            document.getElementById('w2-value').textContent = parseFloat(document.getElementById('w2').value).toFixed(1);
+            document.getElementById('w3-value').textContent = parseFloat(document.getElementById('w3').value).toFixed(1);
+        }
+        
+        // 更新权重总和
+        function updateWeightsSum() {
+            const w1 = parseFloat(document.getElementById('w1').value);
+            const w2 = parseFloat(document.getElementById('w2').value);
+            const w3 = parseFloat(document.getElementById('w3').value);
+            const sum = (w1 + w2 + w3).toFixed(1);
+            document.getElementById('weights-sum').textContent = sum;
+        }
+        
+        // 保存用户权重
+        async function saveUserWeights() {
+            const w1 = parseFloat(document.getElementById('w1').value);
+            const w2 = parseFloat(document.getElementById('w2').value);
+            const w3 = parseFloat(document.getElementById('w3').value);
+            
+            try {
+                const response = await fetch('http://localhost:5001/user-weights', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ w1, w2, w3 })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        alert('权重保存成功！');
+                    }
+                }
+            } catch (error) {
+                console.log('保存权重失败:', error);
+                alert('保存权重失败，请稍后重试');
+            }
+        }
+        
+        // 重置默认权重
+        function resetDefaultWeights() {
+            document.getElementById('w1').value = 0.4;
+            document.getElementById('w2').value = 0.3;
+            document.getElementById('w3').value = 0.3;
+            updateWeightDisplay();
+            updateWeightsSum();
+        }
+        
+        // 显示权重设置面板
+        function toggleWeightsSettings() {
+            const weightsSettings = document.getElementById('weights-settings');
+            if (weightsSettings.style.display === 'none') {
+                weightsSettings.style.display = 'block';
+            } else {
+                weightsSettings.style.display = 'none';
+            }
+        }
+        
+        // 更新对比状态和消息
+        function updateComparisonStatus(coreLevel, modelLevel, comparison) {
+            const statusElement = document.getElementById('comparison-status');
+            const messageElement = document.getElementById('comparison-message');
+            
+            if (comparison === '一致') {
+                statusElement.textContent = '✅ 结果一致';
+                statusElement.style.color = '#28a745';
+                messageElement.textContent = '你的模型很准确地模拟了你的核心函数逻辑！';
+                messageElement.style.color = '#28a745';
+            } else {
+                statusElement.textContent = '⚠️ 结果不一致';
+                statusElement.style.color = '#ffc107';
+                messageElement.textContent = '你的模型与核心函数逻辑有差异，可能需要调整权重或收集更多数据来训练模型。';
+                messageElement.style.color = '#6c757d';
+            }
+        }
+        
+        // 获取或生成匿名ID（保存到localStorage）
+        function getPersistentAnonymousId() {
+            // 优先从localStorage获取
+            let anonymousId = localStorage.getItem('anonymous_id');
+            if (!anonymousId) {
+                // 从cookie获取
+                anonymousId = getCookie('anonymous_id');
+                if (anonymousId) {
+                    // 保存到localStorage
+                    localStorage.setItem('anonymous_id', anonymousId);
+                } else {
+                    // 生成新的匿名ID并保存
+                    anonymousId = 'user_' + Math.random().toString(36).substr(2, 8);
+                    localStorage.setItem('anonymous_id', anonymousId);
+                }
+            }
+            return anonymousId;
+        }
+        
+        // Handle prediction
+        document.getElementById('predict-btn').addEventListener('click', async function() {
+            const taskAversion = document.getElementById('task-aversion').value;
+            const resultValue = document.getElementById('result-value').value;
+            const selfControl = document.getElementById('self-control').value;
+            const source = getTestSource();
+            
+            // 获取持久化的匿名ID
+            const persistentAnonymousId = getPersistentAnonymousId();
+            console.log('使用的持久化匿名ID:', persistentAnonymousId);
+            
+            const payload = {
+                "任务厌恶": parseInt(taskAversion),
+                "结果价值": parseInt(resultValue),
+                "自我控制": parseInt(selfControl)
+            };
+            
+            try {
+                const response = await fetch('http://localhost:5001/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Anonymous-ID': persistentAnonymousId // 添加自定义头部
+                    },
+                    credentials: 'include', // 包含cookie
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('服务器响应错误');
+                }
+                
+                const data = await response.json();
+                
+                // 将匿名ID保存到localStorage（如果响应中包含）
+                if (data.anonymous_id) {
+                    localStorage.setItem('anonymous_id', data.anonymous_id);
+                }
+                
+                // 上报数据，包含预测结果
+                reportData(taskAversion, resultValue, selfControl, source, data.core_function_result['分数'] / 100);
+                
+                // 将结果数据保存到localStorage
+                console.log('准备保存到localStorage的数据:', data);
+                localStorage.setItem('assessmentResult', JSON.stringify(data));
+                console.log('localStorage保存成功:', localStorage.getItem('assessmentResult'));
+                
+                // 同时使用URL参数传递数据，作为备份
+                const dataStr = JSON.stringify(data);
+                const encodedData = encodeURIComponent(dataStr);
+                console.log('编码后的URL数据:', encodedData);
+                
+                // 跳转到报告页面，同时传递URL参数
+                window.location.href = `report.html?data=${encodedData}`;
+                
+            } catch (error) {
+                document.getElementById('error').textContent = '评估失败: ' + error.message;
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('result-comparison').style.display = 'none';
+            }
+        });
+        
+        // 权重滑块事件监听
+        document.getElementById('w1').addEventListener('input', function() {
+            updateWeightDisplay();
+            updateWeightsSum();
+        });
+        
+        document.getElementById('w2').addEventListener('input', function() {
+            updateWeightDisplay();
+            updateWeightsSum();
+        });
+        
+        document.getElementById('w3').addEventListener('input', function() {
+            updateWeightDisplay();
+            updateWeightsSum();
+        });
+        
+        // 保存权重按钮事件监听
+        document.getElementById('save-weights-btn').addEventListener('click', saveUserWeights);
+        
+        // 重置权重按钮事件监听
+        document.getElementById('reset-weights-btn').addEventListener('click', resetDefaultWeights);
+        
+        // 页面加载时加载用户权重
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserWeights();
+        });
+        
+        // 设置菜单点击事件
+        document.getElementById('settings-menu').addEventListener('click', function() {
+            const settingsContent = document.getElementById('settings-content');
+            if (settingsContent.style.display === 'none') {
+                settingsContent.style.display = 'block';
+            } else {
+                settingsContent.style.display = 'none';
+            }
+        });
+        
+        // 认证表单切换
+        document.getElementById('switch-to-register').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+        });
+        
+        document.getElementById('switch-to-login').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+        });
+        
+        // 登录按钮点击事件
+        document.getElementById('login-btn').addEventListener('click', function() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            login(username, password);
+        });
+        
+        // 注册按钮点击事件
+        document.getElementById('register-btn').addEventListener('click', function() {
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            register(username, password);
+        });
+        
+        // 登出按钮点击事件
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            logout();
+        });
+        
+        // 加载数据分析
+        async function loadAnalytics() {
+            console.log('开始加载数据分析...');
+            try {
+                const response = await fetch('http://localhost:5001/analytics', {
+                    method: 'GET',
+                    credentials: 'include' // 包含cookie
+                });
+                
+                if (!response.ok) {
+                    throw new Error('加载数据分析失败，状态码: ' + response.status);
+                }
+                
+                const data = await response.json();
+                console.log('API返回数据:', data);
+                
+                if (data.status === 'success' && data.data) {
+                    const analyticsData = data.data;
+                    console.log('数据分析数据:', analyticsData);
+                    
+                    // 更新数据卡片
+                    document.getElementById('total-records').textContent = analyticsData.total_records;
+                    document.getElementById('average-probability').textContent = (analyticsData.average_probability * 100).toFixed(1) + '%';
+                    document.getElementById('delay-rate').textContent = (analyticsData.delay_rate * 100).toFixed(1) + '%';
+                    
+                    // 更新维度分析
+                    const taskAversionValue = Math.round(analyticsData.average_task_aversion);
+                    const resultValueValue = Math.round(analyticsData.average_result_value);
+                    const selfControlValue = Math.round(analyticsData.average_self_control);
+                    
+                    console.log('维度值:', { taskAversionValue, resultValueValue, selfControlValue });
+                    
+                    // 直接设置初始值为真实数据，确保显示正确
+                    document.getElementById('analytics-task-aversion-value').textContent = taskAversionValue;
+                    document.getElementById('analytics-task-aversion-bar').style.width = taskAversionValue + '%';
+                    
+                    document.getElementById('analytics-result-value-value').textContent = resultValueValue;
+                    document.getElementById('analytics-result-value-bar').style.width = resultValueValue + '%';
+                    
+                    document.getElementById('analytics-self-control-value').textContent = selfControlValue;
+                    document.getElementById('analytics-self-control-bar').style.width = selfControlValue + '%';
+                    
+                    // 绘制趋势图
+                    drawTrendChart(analyticsData.trend);
+                    
+                    document.getElementById('analytics-error').style.display = 'none';
+                } else if (data.error) {
+                    console.error('API返回错误:', data.error);
+                    document.getElementById('analytics-error').textContent = data.error || '加载数据分析失败';
+                    document.getElementById('analytics-error').style.display = 'block';
+                } else {
+                    console.error('数据分析API响应格式错误:', data);
+                    document.getElementById('analytics-error').textContent = '加载数据分析失败，请稍后重试';
+                    document.getElementById('analytics-error').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('加载数据分析失败:', error);
+                document.getElementById('analytics-error').textContent = '加载数据分析失败，请稍后重试';
+                document.getElementById('analytics-error').style.display = 'block';
+            }
+        }
+        
+        // 绘制趋势图
+        function drawTrendChart(trendData) {
+            const chartContainer = document.getElementById('trend-chart');
+            chartContainer.innerHTML = '';
+            
+            if (!trendData || trendData.length === 0) {
+                chartContainer.innerHTML = '<div style="padding: 40px; text-align: center; color: #666;">暂无趋势数据</div>';
+                return;
+            }
+            
+            // 简单的趋势图绘制
+            const canvas = document.createElement('canvas');
+            canvas.width = chartContainer.clientWidth;
+            canvas.height = chartContainer.clientHeight;
+            chartContainer.appendChild(canvas);
+            
+            const ctx = canvas.getContext('2d');
+            
+            // 设置图表尺寸
+            const padding = 50; // 增加内边距，为坐标轴标签留出空间
+            const chartWidth = canvas.width - padding * 2;
+            const chartHeight = canvas.height - padding * 2;
+            
+            // 计算数据范围
+            let maxProbability = Math.max(...trendData.map(item => item.probability));
+            let minProbability = Math.min(...trendData.map(item => item.probability));
+            maxProbability = Math.ceil(maxProbability * 10) / 10;
+            minProbability = Math.floor(minProbability * 10) / 10;
+            
+            // 绘制背景
+            ctx.fillStyle = '#fafafa';
+            ctx.fillRect(padding, padding, chartWidth, chartHeight);
+            
+            // 绘制网格
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            
+            // 水平线
+            for (let i = 0; i <= 5; i++) {
+                const y = padding + (chartHeight / 5) * i;
+                const probability = maxProbability - (maxProbability - minProbability) * (i / 5);
+                
+                // 绘制网格线
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(canvas.width - padding, y);
+                ctx.stroke();
+                
+                // 绘制纵坐标标签
+                ctx.fillStyle = '#666';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'right';
+                ctx.fillText((probability * 100).toFixed(0) + '%', padding - 10, y + 5);
+            }
+            
+            // 垂直线
+            for (let i = 0; i <= trendData.length; i++) {
+                const x = padding + (chartWidth / trendData.length) * i;
+                
+                // 绘制网格线
+                ctx.beginPath();
+                ctx.moveTo(x, padding);
+                ctx.lineTo(x, canvas.height - padding);
+                ctx.stroke();
+                
+                // 绘制横坐标标签（每2个点显示一个标签）
+                if (i % 2 === 0 && i <= trendData.length - 1) {
+                    ctx.fillStyle = '#666';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText((i + 1).toString(), x, canvas.height - padding + 20);
+                }
+            }
+            
+            // 绘制坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            
+            // X轴
+            ctx.beginPath();
+            ctx.moveTo(padding, canvas.height - padding);
+            ctx.lineTo(canvas.width - padding, canvas.height - padding);
+            ctx.stroke();
+            
+            // Y轴
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, canvas.height - padding);
+            ctx.stroke();
+            
+            // 绘制坐标轴标题
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('评估次数', canvas.width / 2, canvas.height - 10);
+            
+            ctx.save();
+            ctx.translate(15, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('拖延概率', 0, 0);
+            ctx.restore();
+            
+            // 绘制数据线
+            ctx.strokeStyle = '#4a6fa5';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            trendData.forEach((item, index) => {
+                const x = padding + (chartWidth / (trendData.length - 1)) * index;
+                const y = padding + chartHeight - ((item.probability - minProbability) / (maxProbability - minProbability)) * chartHeight;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // 绘制数据点
+            ctx.fillStyle = '#4a6fa5';
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            
+            trendData.forEach((item, index) => {
+                const x = padding + (chartWidth / (trendData.length - 1)) * index;
+                const y = padding + chartHeight - ((item.probability - minProbability) / (maxProbability - minProbability)) * chartHeight;
+                
+                // 绘制数据点边框
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // 绘制数据点填充
+                ctx.fill();
+                
+                // 显示数据点数值
+                ctx.fillStyle = '#333';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText((item.probability * 100).toFixed(0) + '%', x, y - 10);
+            });
+            
+            // 绘制图例
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('拖延概率趋势', canvas.width - 100, padding - 10);
+            
+            ctx.fillStyle = '#4a6fa5';
+            ctx.fillRect(canvas.width - 110, padding - 15, 10, 10);
+        }
+        
+        // 刷新历史记录按钮点击事件
+        document.getElementById('refresh-history').addEventListener('click', function() {
+            loadHistory();
+        });
+        
+        // 刷新数据分析按钮点击事件
+        document.getElementById('refresh-analytics').addEventListener('click', function() {
+            loadAnalytics();
+        });
+        
+        // 数据分析菜单点击事件
+        document.getElementById('analytics-menu').addEventListener('click', function() {
+            // 切换到数据分析页面
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+            
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            document.getElementById('analytics-tab').classList.add('active');
+            
+            // 加载数据分析
+            loadAnalytics();
+        });
+        
+        // 底部导航栏切换功能
+        function setupNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // 移除所有导航项的active类
+                    navItems.forEach(i => i.classList.remove('active'));
+                    // 添加当前导航项的active类
+                    this.classList.add('active');
+                    
+                    // 隐藏所有内容
+                    const tabContents = document.querySelectorAll('.tab-content');
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // 显示当前标签页的内容
+                    const tabId = this.dataset.tab;
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                    
+                    // 如果切换到历史记录标签页，加载历史记录
+                    if (tabId === 'history') {
+                        loadHistory();
+                    }
+                    // 如果切换到数据分析标签页，加载数据分析
+                    if (tabId === 'analytics') {
+                        loadAnalytics();
+                    }
+                });
+            });
+        }
+        
+        // 处理用户同意
+        function handleConsent() {
+            const consentAgree = document.getElementById('consent-agree');
+            const consentDisagree = document.getElementById('consent-disagree');
+            const consentContainer = document.getElementById('consent-container');
+            
+            // 重置同意状态，确保每次都显示同意弹窗
+            localStorage.removeItem('consented');
+            localStorage.removeItem('consentType');
+            
+            // 显示同意弹窗
+            consentContainer.style.display = 'flex';
+            
+            consentAgree.addEventListener('click', function() {
+                localStorage.setItem('consented', 'true');
+                localStorage.setItem('consentType', 'agree');
+                consentContainer.style.display = 'none';
+            });
+            
+            consentDisagree.addEventListener('click', function() {
+                localStorage.setItem('consented', 'true');
+                localStorage.setItem('consentType', 'disagree');
+                consentContainer.style.display = 'none';
+            });
+        }
+        
+        // 处理反馈收集
+        function setupFeedback() {
+            const feedbackButtons = document.querySelectorAll('.feedback-btn');
+            const submitFeedbackBtn = document.querySelector('.submit-feedback-btn');
+            const feedbackContainer = document.getElementById('feedback-container');
+            const feedbackSuccess = document.getElementById('feedback-success');
+            
+            let selectedFeedback = null;
+            
+            // 处理反馈按钮点击
+            feedbackButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    feedbackButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedFeedback = this.dataset.feedback;
+                });
+            });
+            
+            // 处理提交反馈
+            submitFeedbackBtn.addEventListener('click', async function() {
+                if (!selectedFeedback) {
+                    alert('请选择反馈类型');
+                    return;
+                }
+                
+                const comments = document.querySelector('.feedback-input').value;
+                
+                try {
+                    const response = await fetch('http://localhost:5001/feedback', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            feedback: parseInt(selectedFeedback),
+                            comments: comments
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        feedbackSuccess.style.display = 'block';
+                        setTimeout(() => {
+                            feedbackSuccess.style.display = 'none';
+                        }, 3000);
+                    }
+                } catch (error) {
+                    console.log('提交反馈失败:', error);
+                }
+            });
+        }
+        
+        // 确保匿名ID存在
+        async function ensureAnonymousId() {
+            try {
+                // 检查是否已经有匿名ID cookie
+                const hasCookie = document.cookie.split(';').some(cookie => cookie.trim().startsWith('anonymous_id='));
+                if (!hasCookie) {
+                    // 没有匿名ID，发送请求获取或生成
+                    console.log('没有匿名ID，发送请求获取...');
+                    const response = await fetch('http://localhost:5001/user-weights', {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+                    if (response.ok) {
+                        console.log('成功获取匿名ID');
+                    }
+                } else {
+                    console.log('已存在匿名ID cookie');
+                }
+            } catch (error) {
+                console.error('获取匿名ID失败:', error);
+            }
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', async function() {
+            // 确保匿名ID存在
+            await ensureAnonymousId();
+            
+            // 处理用户同意
+            handleConsent();
+            // 设置底部导航栏
+            setupNavigation();
+            // 设置反馈收集
+            setupFeedback();
+            
+            // 添加认证相关事件监听器
+            // 登录按钮事件
+            document.getElementById('login-btn').addEventListener('click', function() {
+                const identifier = document.getElementById('login-identifier').value;
+                const password = document.getElementById('login-password').value;
+                login(identifier, password);
+            });
+            
+            // 注册按钮事件
+            document.getElementById('register-btn').addEventListener('click', function() {
+                const phone = document.getElementById('register-phone').value;
+                const email = document.getElementById('register-email').value;
+                const username = document.getElementById('register-username').value;
+                const password = document.getElementById('register-password').value;
+                register(phone, email, username, password);
+            });
+            
+            // 发送重置链接按钮事件
+            document.getElementById('reset-request-btn').addEventListener('click', function() {
+                const identifier = document.getElementById('reset-identifier').value;
+                requestPasswordReset(identifier);
+            });
+            
+            // 切换到注册表单
+            document.getElementById('switch-to-register').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('register-form').style.display = 'block';
+            });
+            
+            // 切换到登录表单
+            document.getElementById('switch-to-login').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('register-form').style.display = 'none';
+                document.getElementById('login-form').style.display = 'block';
+            });
+            
+            // 切换到忘记密码表单
+            document.getElementById('forgot-password').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('forgot-password-form').style.display = 'block';
+            });
+            
+            // 从忘记密码表单切换回登录表单
+            document.getElementById('switch-to-login-from-reset').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('forgot-password-form').style.display = 'none';
+                document.getElementById('login-form').style.display = 'block';
+            });
+            
+            // 登出按钮事件
+            document.getElementById('logout-btn').addEventListener('click', logout);
+            
+            // 检查登录状态
+            checkLoginStatus().then(() => {
+                // 检查当前活动的标签页
+                const activeTab = document.querySelector('.nav-item.active');
+                if (activeTab) {
+                    const tabId = activeTab.dataset.tab;
+                    if (tabId === 'history') {
+                        loadHistory();
+                    } else if (tabId === 'analytics') {
+                        loadAnalytics();
+                    }
+                } else {
+                    // 没有活动标签页时，检查URL参数或默认加载
+                    // 对于数据分析页面，确保在页面加载时调用loadAnalytics
+                    // 检查当前是否在analytics-tab
+                    const analyticsTab = document.getElementById('analytics-tab');
+                    if (analyticsTab.classList.contains('active')) {
+                        loadAnalytics();
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+name: Deploy to Aliyun Server
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libffi-dev python3-dev gcc curl
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools_rust
+        pip install -r requirements.txt
+    
+    - name: Install Podman
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y podman podman-compose
+    
+    - name: Build Podman image
+      run: |
+        podman build -t procrastination_tool:latest .
+        podman save -o procrastination_tool.tar procrastination_tool:latest
+    
+    # 移除SSH部署步骤，改为手动部署
+    # - name: Set up SSH
+    #   uses: webfactory/ssh-agent@v0.9.0
+    #   with:
+    #     ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+    
+    # - name: Deploy to Aliyun Server
+    #   run: |
+    #     # 复制镜像到服务器
+    #     scp procrastination_tool.tar root@8.148.7.83:/home/admin/
+    #     
+    #     # 连接到服务器并部署
+    #     ssh root@8.148.7.83 << 'EOF'
+    #     # 进入项目目录
+    #     cd /home/admin/procrastination_tool
+    #     
+    #     # 加载Podman镜像
+    #     podman load -i /home/admin/procrastination_tool.tar
+    #     
+    #     # 停止旧容器
+    #     podman-compose down || true
+    #     
+    #     # 启动新容器
+    #     podman-compose up -d
+    #     
+    #     # 清理临时文件
+    #     rm /home/admin/procrastination_tool.tar
+    #     
+    #     # 查看容器状态
+    #     podman ps
+    #     EOF
+    
+    - name: Build completed successfully
+      run: |
+        echo "Build completed successfully!"
+        echo "Image saved as procrastination_tool.tar"
+        echo "Please deploy manually to Aliyun server:"
+        echo "1. Copy the image to server: scp procrastination_tool.tar root@8.148.7.83:/home/admin/"
+        echo "2. SSH to server: ssh root@8.148.7.83"
+        echo "3. Deploy: cd /home/admin/procrastination_tool && podman-compose down || true && podman load -i /home/admin/procrastination_tool.tar && podman-compose up -d"
+        echo "4. Clean up: rm /home/admin/procrastination_tool.tar"
+        echo "5. Check status: podman ps"

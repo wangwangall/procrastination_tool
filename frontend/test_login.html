@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        h1 {
+            color: #00897b;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #00897b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #00695c;
+        }
+        
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .success {
+            color: #2e7d32;
+        }
+        
+        .error {
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <h1>登录测试</h1>
+    
+    <div class="form-group">
+        <label>手机号/邮箱</label>
+        <input type="text" id="identifier" value="15314244412">
+    </div>
+    
+    <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="password" value="wwall334133">
+    </div>
+    
+    <button onclick="login()">登录</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        async function login() {
+            const identifier = document.getElementById('identifier').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '登录中...';
+            resultDiv.className = '';
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ identifier, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    resultDiv.textContent = `登录成功！用户名: ${data.username}, 用户ID: ${data.user_id}`;
+                    resultDiv.className = 'success';
+                    
+                    // 跳转到主页面
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    resultDiv.textContent = `登录失败: ${data.message}`;
+                    resultDiv.className = 'error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `错误: ${error.message}`;
+                resultDiv.className = 'error';
+            }
+        }
+    </script>
+</body>
+</html>
