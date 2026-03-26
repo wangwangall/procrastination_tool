@@ -327,7 +327,9 @@ def login():
         user_id, username, password_hash = user
         
         # 验证密码
-        if not bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8')):
+        if isinstance(password_hash, str):
+            password_hash = password_hash.encode('utf-8')
+        if not bcrypt.checkpw(password.encode('utf-8'), password_hash):
             conn.close()
             return jsonify({'status': 'error', 'message': '密码错误'}), 401
         
