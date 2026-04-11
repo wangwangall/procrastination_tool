@@ -965,7 +965,10 @@
             <div id="input-tab" class="tab-content active">
                 <div class="card">
                     <div class="card-title">任务描述 <span style="color: #c62828; font-size: 14px;">*</span></div>
-                    <textarea class="notes-input" id="user-notes" placeholder="请描述你的任务..."></textarea>
+                    <div style="margin-bottom: 10px; font-size: 12px; color: #666;">
+                        请详细描述你当前面临的任务，包括任务内容、截止时间、重要性等信息，这将帮助我们提供更准确的评估。
+                    </div>
+                    <textarea class="notes-input" id="user-notes" placeholder="例如：完成项目报告，明天截止，对晋升很重要..."></textarea>
                 </div>
                 
                 <div class="card">
@@ -1672,6 +1675,11 @@
                     <div style="font-size: 12px; color: #999;">用户: ${username} | 时间: ${reportTime}</div>
                 </div>
                 
+                ${result.user_notes ? `<div style="margin-bottom: 20px; padding: 15px; background: #fff9c4; border-radius: 12px; border-left: 4px solid #ffeb3b;">
+                    <div style="font-weight: 600; margin-bottom: 10px; color: #666; font-size: 16px;">📋 任务描述</div>
+                    <div style="color: #666; line-height: 1.6;">${result.user_notes}</div>
+                </div>` : ''}
+                
                 <div style="margin-bottom: 20px;">
                     <div style="font-weight: 600; margin-bottom: 10px; color: #555;">三维度分数</div>
                     <div style="display: flex; justify-content: space-around; padding: 15px; background: linear-gradient(135deg, #f5f5f5 0%, #e8f5e9 100%); border-radius: 12px;">
@@ -1845,6 +1853,11 @@
                     <div style="font-size: 12px; color: #999;">用户: ${username} | 时间: ${reportTime}</div>
                 </div>
                 
+                ${item.user_notes ? `<div style="margin-bottom: 20px; padding: 15px; background: #fff9c4; border-radius: 12px; border-left: 4px solid #ffeb3b;">
+                    <div style="font-weight: 600; margin-bottom: 10px; color: #666; font-size: 16px;">📋 任务描述</div>
+                    <div style="color: #666; line-height: 1.6;">${item.user_notes}</div>
+                </div>` : ''}
+                
                 <div style="margin-bottom: 20px;">
                     <div style="font-weight: 600; margin-bottom: 10px; color: #555;">三维度分数</div>
                     <div style="display: flex; justify-content: space-around; padding: 15px; background: linear-gradient(135deg, #f5f5f5 0%, #e8f5e9 100%); border-radius: 12px;">
@@ -1948,6 +1961,10 @@
                     listContainer.innerHTML = history.map(item => `
                         <div class="history-card">
                             <div class="history-time">${formatTime(item.timestamp)}</div>
+                            
+                            ${item.user_notes ? `<div style="margin-bottom: 15px; padding: 10px; background: #fff9c4; border-radius: 8px; font-size: 14px; color: #666;">
+                                <strong>任务描述:</strong> ${item.user_notes}
+                            </div>` : ''}
                             
                             <div class="history-dimensions">
                                 <div class="dimension-item">
