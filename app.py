@@ -11,13 +11,19 @@ import json
 import bcrypt
 import jwt
 import pickle
-from datetime import datetime
+import csv
+import time
+from datetime import datetime, timedelta
 from functools import wraps
-from flask import Flask, request, jsonify, send_from_directory, g
+from flask import Flask, request, jsonify, send_from_directory, g, make_response
 from flask_cors import CORS
 from sklearn.linear_model import LogisticRegression
 import numpy as np
 from dotenv import load_dotenv
+
+# 存储API请求频率的字典
+request_counts = {}
+RATE_LIMIT = 60  # 每分钟最多60个请求
 
 # 加载环境变量
 load_dotenv('.env.production')
@@ -190,6 +196,32 @@ def init_db():
     conn.commit()
     conn.close()
 
+# ==================== API请求频率限制装饰器 ====================
+
+def rate_limit(f):
+    """API请求频率限制装饰器"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        client_ip = request.remote_addr
+        current_time = time.time()
+        
+        # 清理过期的请求记录
+        if client_ip in request_counts:
+            # 只保留最近60秒的请求
+            request_counts[client_ip] = [t for t in request_counts[client_ip] if current_time - t < 60]
+        else:
+            request_counts[client_ip] = []
+        
+        # 检查请求频率
+        if len(request_counts[client_ip]) >= RATE_LIMIT:
+            return jsonify({'status': 'error', 'message': '请求过于频繁，请稍后再试'}), 429
+        
+        # 记录本次请求
+        request_counts[client_ip].append(current_time)
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
 # ==================== 用户认证装饰器 ====================
 
 def login_required(f):
@@ -222,6 +254,7 @@ def login_required(f):
 # ==================== 用户认证API ====================
 
 @app.route('/api/register', methods=['POST'])
+@rate_limit
 def register():
     """用户注册"""
     try:
@@ -245,8 +278,8 @@ def register():
         # 生成用户ID
         user_id = f"user_{datetime.now().strftime('%Y%m%d%H%M%S')}_{np.random.randint(1000, 9999)}"
         
-        # 密码加密
-        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        # 密码加密（增强哈希强度）
+        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(rounds=12)).decode('utf-8')
         
         conn = sqlite3.connect(app.config['DATABASE'])
         cursor = conn.cursor()
@@ -297,6 +330,7 @@ def register():
         return jsonify({'status': 'error', 'message': f'注册失败: {str(e)}'}), 500
 
 @app.route('/api/login', methods=['POST'])
+@rate_limit
 def login():
     """用户登录"""
     try:
@@ -365,6 +399,7 @@ def login():
         return jsonify({'status': 'error', 'message': f'登录失败: {str(e)}'}), 500
 
 @app.route('/api/logout', methods=['POST'])
+@rate_limit
 def logout():
     """用户登出"""
     response = jsonify({'status': 'success', 'message': '已登出'})
@@ -373,6 +408,7 @@ def logout():
 
 @app.route('/api/user', methods=['GET'])
 @login_required
+@rate_limit
 def get_user_info():
     """获取当前用户信息"""
     conn = sqlite3.connect(app.config['DATABASE'])
@@ -409,6 +445,7 @@ def get_user_info():
 
 @app.route('/api/assess', methods=['POST'])
 @login_required
+@rate_limit
 def assess():
     """拖延风险评估（核心功能）"""
     data = request.json
@@ -822,7 +859,7 @@ def generate_html_report(user_id, username, timestamp, task_aversion, result_val
                 </div>
             </div>
             
-            {"<div class='notes-box'><strong>你的备注：</strong><br>" + user_notes + "</div>" if user_notes else ""}
+            {"<div class='notes-box'><strong>任务描述：</strong><br>" + user_notes + "</div>" if user_notes else ""}
         </div>
         
         <div class="footer">
@@ -842,6 +879,7 @@ def generate_html_report(user_id, username, timestamp, task_aversion, result_val
 
 @app.route('/api/history', methods=['GET'])
 @login_required
+@rate_limit
 def get_history():
     """获取历史记录"""
     conn = sqlite3.connect(app.config['DATABASE'])
@@ -890,6 +928,7 @@ def get_history():
 
 @app.route('/api/analytics', methods=['GET'])
 @login_required
+@rate_limit
 def get_analytics():
     """获取数据分析"""
     conn = sqlite3.connect(app.config['DATABASE'])
@@ -960,6 +999,7 @@ def get_analytics():
 
 @app.route('/api/weights', methods=['GET', 'POST'])
 @login_required
+@rate_limit
 def handle_weights():
     """获取或设置权重"""
     if request.method == 'GET':
@@ -1005,6 +1045,7 @@ def handle_weights():
 
 @app.route('/api/feedback', methods=['POST'])
 @login_required
+@rate_limit
 def submit_feedback():
     """提交用户对建议的反馈"""
     data = request.json
@@ -1046,6 +1087,7 @@ def submit_feedback():
 
 @app.route('/api/feedback/stats', methods=['GET'])
 @login_required
+@rate_limit
 def get_feedback_stats():
     """获取反馈统计数据（管理员功能）"""
     conn = sqlite3.connect(app.config['DATABASE'])
@@ -1087,12 +1129,123 @@ def get_feedback_stats():
         }
     })
 
+@app.route('/api/admin/stats', methods=['GET'])
+@login_required
+@rate_limit
+def get_admin_stats():
+    """获取管理统计数据（管理员功能）"""
+    conn = sqlite3.connect(app.config['DATABASE'])
+    cursor = conn.cursor()
+    
+    # 获取总用户数
+    cursor.execute('SELECT COUNT(*) FROM users')
+    total_users = cursor.fetchone()[0]
+    
+    # 获取活跃用户数（有行为记录）
+    cursor.execute('SELECT COUNT(DISTINCT user_id) FROM risk_records')
+    active_users = cursor.fetchone()[0]
+    
+    # 获取风险记录总数
+    cursor.execute('SELECT COUNT(*) FROM risk_records')
+    total_records = cursor.fetchone()[0]
+    
+    # 获取各风险等级分布
+    cursor.execute('''
+        SELECT risk_level, COUNT(*) 
+        FROM risk_records 
+        GROUP BY risk_level
+    ''')
+    risk_levels = dict(cursor.fetchone()) if total_records > 0 else {}
+    
+    # 获取平均分数
+    cursor.execute('SELECT AVG(score) FROM risk_records')
+    avg_score = cursor.fetchone()[0] or 0
+    
+    # 获取三维度平均分数
+    cursor.execute('''
+        SELECT AVG(task_aversion), AVG(result_value), AVG(self_control)
+        FROM risk_records
+    ''')
+    avg_dimensions = cursor.fetchone()
+    
+    # 获取反馈统计
+    cursor.execute('''
+        SELECT feedback_type, COUNT(*) 
+        FROM feedbacks 
+        GROUP BY feedback_type
+    ''')
+    feedback_counts = dict(cursor.fetchall())
+    
+    conn.close()
+    
+    return jsonify({
+        'status': 'success',
+        'stats': {
+            'total_users': total_users,
+            'active_users': active_users,
+            'total_records': total_records,
+            'risk_levels': risk_levels,
+            'avg_score': round(avg_score, 2),
+            'avg_dimensions': {
+                'task_aversion': round(avg_dimensions[0], 2) if avg_dimensions[0] else 0,
+                'result_value': round(avg_dimensions[1], 2) if avg_dimensions[1] else 0,
+                'self_control': round(avg_dimensions[2], 2) if avg_dimensions[2] else 0
+            },
+            'feedback_counts': feedback_counts
+        }
+    })
+
 # ==================== 报告访问 ====================
 
 @app.route('/api/report/<path:report_path>')
 def get_report(report_path):
     """访问HTML报告"""
     return send_from_directory('data/reports', report_path)
+
+# ==================== 数据导出API ====================
+
+@app.route('/api/export', methods=['GET'])
+@login_required
+@rate_limit
+def export_data():
+    """导出用户数据为CSV格式"""
+    conn = sqlite3.connect(app.config['DATABASE'])
+    cursor = conn.cursor()
+    
+    # 获取用户历史记录
+    cursor.execute('''
+        SELECT id, task_aversion, result_value, self_control, w1, w2, w3, 
+               score, risk_level, model_predicted_level, suggestion, 
+               user_notes, timestamp
+        FROM risk_records 
+        WHERE user_id = ? 
+        ORDER BY timestamp DESC
+    ''', (g.user_id,))
+    
+    records = cursor.fetchall()
+    conn.close()
+    
+    # 创建CSV响应
+    response = make_response()
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = f'attachment; filename=procrastination_data_{g.user_id}_{datetime.now().strftime("%Y%m%d")}.csv'
+    
+    # 写入CSV数据
+    writer = csv.writer(response.stream)
+    # 写入表头
+    writer.writerow(['ID', '任务厌恶程度', '结果价值感', '自我控制能力', 
+                    '权重1', '权重2', '权重3', '分数', '风险等级', 
+                    '模型预测等级', '建议', '用户备注', '时间戳'])
+    
+    # 写入数据行
+    for record in records:
+        writer.writerow([
+            record[0], record[1], record[2], record[3], 
+            record[4], record[5], record[6], record[7], 
+            record[8], record[9], record[10], record[11], record[12]
+        ])
+    
+    return response
 
 # ==================== 前端页面路由 ====================
 
