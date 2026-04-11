@@ -964,6 +964,11 @@
             <!-- 输入评估选项卡内容 -->
             <div id="input-tab" class="tab-content active">
                 <div class="card">
+                    <div class="card-title">任务描述 <span style="color: #c62828; font-size: 14px;">*</span></div>
+                    <textarea class="notes-input" id="user-notes" placeholder="请描述你的任务..."></textarea>
+                </div>
+                
+                <div class="card">
                     <div class="card-title">当前权重设置</div>
                     <div class="weights-display" id="current-weights">
                         任务厌恶: 0.4 | 结果价值: 0.3 | 自我控制: 0.3
@@ -1041,11 +1046,6 @@
                         </div>
                         <input type="range" id="self-control" min="0" max="100" value="50">
                     </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-title">备注（选填）</div>
-                    <textarea class="notes-input" id="user-notes" placeholder="记录你的想法、情境或感受..."></textarea>
                 </div>
                 
                 <button class="submit-btn" id="assess-btn" onclick="handleAssess()">提交评估</button>
@@ -1618,6 +1618,12 @@
             const resultValue = parseInt(document.getElementById('result-value').value);
             const selfControl = parseInt(document.getElementById('self-control').value);
             const userNotes = document.getElementById('user-notes').value.trim();
+            
+            // 验证任务描述是否填写
+            if (!userNotes) {
+                alert('请填写任务描述');
+                return;
+            }
             
             const btn = document.getElementById('assess-btn');
             btn.disabled = true;
